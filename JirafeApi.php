@@ -1,15 +1,7 @@
 <?php
 
-// Set to true if you want to debug the Jirafe API
-define ('JIRAFE_DEBUG', false);
-
 // Add this to the include path so that we can use Zend_Http_Client
-set_include_path(get_include_path() . PATH_SEPARATOR. dirname(__FILE__));
-
-// Autoload some Zend files to use Zend_Http_Client
-require_once 'Zend/Loader.php';
-require_once 'Zend/Loader/Autoloader.php';
-Zend_Loader_Autoloader::getInstance();
+//set_include_path(get_include_path() . PATH_SEPARATOR. dirname(__FILE__));
 
 /**
  * Class which communicates with the Jirafe API
@@ -17,6 +9,11 @@ Zend_Loader_Autoloader::getInstance();
  */
 class JirafeApi
 {
+    /**
+     * Debug variable - when set to true, it will use local Jirafe API, and turn on debugging
+     */
+    static $debug = true;
+    
     public static function createApplication($app)
     {
         $data = array('name' => $app['name'], 'url' => $app['url']);
@@ -49,8 +46,17 @@ class JirafeApi
      */
     public static function request($app, $method, $requestType, $data = null)
     {
+        // Load the class needed for Zend Http Client
+        require_once dirname(__FILE__).'/Zend/Http/Client.php';
+        require_once dirname(__FILE__).'/Zend/Exception.php';
+        require_once dirname(__FILE__).'/Zend/Registry.php';
+        
         // Get the URL that we would like to request
-        $url = "https://api.jirafe.com/v1/$method";
+        if (JirafeApi::$debug) {
+            $url = "https://api.jirafe.local/app_dev.php/v1/$method";
+        } else {
+            $url = "https://api.jirafe.com/v1/$method";
+        }
         
         $conn = new Zend_Http_Client($url);
         $conn->setConfig(array('timeout' => 30, 'keepalive' => true));
@@ -67,7 +73,7 @@ class JirafeApi
         if (!empty($app['token'])) {
             $conn->setParameterGet('token', $app['token']);
         }
-        if (JIRAFE_DEBUG) {
+        if (JirafeApi::$debug) {
             $conn->setParameterGet('XDEBUG_SESSION_START', 'jirafe');
         }
         if (!empty($data)) {

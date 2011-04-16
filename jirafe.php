@@ -3,8 +3,9 @@
 // Set to true if you want to debug the Jirafe API
 define ('JIRAFE_DEBUG', false);
 
-// Add this to the include path so that we can use Zend_Http_Client
-set_include_path(get_include_path() . PATH_SEPARATOR. dirname(__FILE__));
+// Include the other Jirafe files
+include_once 'PsApi.php';
+include_once 'JirafeApi.php';
 
 /*
 	REQUIREMENTS
@@ -70,21 +71,13 @@ class Jirafe extends Module
             PsApi::setApplication($app);
         }
         
-        // Gather information neeeded to run our initial sync
-        $users = PsApi::getUsers();
-        $sites = PsApi::getSites();
-        
-        // Sync the information in PS with Jirafe
-        $results = JirafeApi::sync($app, $users, $sites);
-        
-        // Save information back in Prestashop
-        PsApi::setUsers($results['users']);
-        PsApi::setSites($results['sites']);
+        // Sync for the first time
+        PsApi::sync();
         
         // Add hooks for stats and tags
 		return (
             parent::install()  // Get Jirafe ID, perform initial sync
-//            && $this->registerHook('backOfficeHeader')  // Check to see if we should sync
+            && $this->registerHook('backOfficeTop')  // Check to see if we should sync
             && $this->registerHook('header')  // Install Jirafe tags
 //            && $this->registerHook('productfooter')  // Product specific information
 //            && $this->registerHook('home')  // Do we need this?
@@ -134,10 +127,61 @@ class Jirafe extends Module
 		return $html;
 	}
 
+    /**
+     * Check to see if someone saved something we need to update Jirafe about
+     *
+     * @param array $params Information from the user, like cookie, etc
+     * @todo Iterate through the exact employee fields that trigger a sync.  For now, every save triggers a sync.
+     */
+    public function hookBackOfficeTop($params)
+    {
+        $sync = false;
+        // Saving employee information
+        if (!empty($_GET['submitAddemployee'])) {
+            // Always sync a new user
+            if (empty($_POST['id_employee'])) {
+                $sync = true;
+            } else {
+                // For now always sync when a user is saved.  Modify in the future to only save when something we care about changes
+                $sync = true;
+            }
+        }
+        
+        // Saving general configuration (enable store, timezone)
+        if (!empty($_GET['submitgeneralconfiguration'])) {
+            // This is the list of fields we care about
+            $fields = array('PS_SHOP_ENABLE', 'PS_TIMEZONE');
+            // Loop through the fields to see if any changed
+            foreach ($fields as $field) {
+                if ($_POST[$field] != Configuration::get($field)) {
+                    $sync = true;
+                }
+            }
+        }
+        
+        // Saving currencies
+        if (!empty($_GET['submitOptionscurrency'])) {
+            if ($_POST['PS_CURRENCY_DEFAULT'] != Configuration::get('PS_CURRENCY_DEFAULT')) {
+                $sync = true;
+            }
+        }
+        
+        // If we need to sync, then sync!
+        if ($sync) {
+            PsApi::sync();
+        }
+    }
+    
+    /**
+     * Hook which allows us to insert our analytics tag into the Front end
+     *
+     * @param array $params variables from the front end
+     * @return string the additional HTML that we are generating in the header
+     */
 	public function hookHeader($params)
 	{
         // Set some variables needed to generate the ad tag
-        $siteId = (int)Configuration::get('JIRAFE_SITES')[1]['site_id'];
+        $siteId = PsApi::getSiteId();
         $visitorType = PsApi::getVisitorType();
         
         // Get the HTML

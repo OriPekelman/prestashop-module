@@ -1,23 +1,28 @@
 <?php
 
+// Add this to the include path so that we can use Zend_Http_Client
+set_include_path(get_include_path() . PATH_SEPARATOR. dirname(__FILE__));
+
 class PsApi
 {
-    public function getApplication()
+    public static function getApplication()
     {
         $data = array(
             'name' => Configuration::get('PS_SHOP_NAME'),
             'url' => 'http://' . Configuration::get('PS_SHOP_DOMAIN')
         );
-            
-        if (!empty(Configuration::get('JIRAFE_TOKEN'))) {
-            $data['token'] = Configuration::get('JIRAFE_TOKEN');
+        
+        $token = Configuration::get('JIRAFE_TOKEN');
+        if (!empty($token)) {
+            $data['token'] = $token;
         }
         
-        if (!empty(Configuration::get('JIRAFE_ID'))) {
-            $data['app_id'] = Configuration::get('JIRAFE_ID');
+        $appId = Configuration::get('JIRAFE_ID');
+        if (!empty($appId)) {
+            $data['app_id'] = $appId;
         }
         
-        return $response;
+        return $data;
     }
     
     public static function setApplication($app)
@@ -30,7 +35,12 @@ class PsApi
         }
     }
     
-    public function getUsers($app)
+    /**
+     * Get the Jirafe users, which are the PS employees with their Jirafe tokens
+     *
+     * @return array A list of Jirafe users
+     */
+    public static function getUsers()
     {
         $users = array();
         
@@ -41,29 +51,24 @@ class PsApi
         $jirafeUsers = Configuration::get('JIRAFE_USERS');
         
         foreach ($psEmployees as $psEmployee) {
-            // Both email and username will be set to $username, so that there is not duplicates in Jirafe
-            $username = JirafeApi::generateUsername($app, $psEmployee['email']);
             
             // Get the ID of the employee
             $id = $psEmployee['id_employee'];
             
             // Check to see if username is already set
-            if (!empty($jirafeUsers[$id]['username'])) {
-                $username = $jirafeUsers[$id]['username']
-            } else {
-                $username = PsApi::generateUsername($psEmployee['email']);
-            }
+            $username = PsApi::getUsername($psEmployee['email']);
             
             // Set the information into the user
             $user = array(
                 'email' => $username,
                 'username' => $username,
-                'external_id' => $id
+                'first_name' => $psEmployee['firstname'],
+                'last_name' => $psEmployee['lastname']
             );
             
             // Check to see if there is a token already for this employee - if so, add to the array
-            if (!empty($jirafeUsers[$id]['token'])) {
-                $user['token'] = $jirafeUsers[$id]['token'];
+            if (!empty($jirafeUsers[$username]['token'])) {
+                $user['token'] = $jirafeUsers[$username]['token'];
             }
             
             // Add this user to the list of users to return
@@ -81,10 +86,7 @@ class PsApi
             
             // Save Jirafe specific information to the DB
             if (!empty($user['token'])) {
-                $jirafeUsers[$user['external_id']]['token'] = $user['token'];
-            }
-            if (!empty($user['username'])) {
-                $jirafeUsers[$user['external_id']]['username'] = $user['username'];
+                $jirafeUsers[$user['username']]['token'] = $user['token'];
             }
         }
         
@@ -96,7 +98,7 @@ class PsApi
      *
      * @return array $sites An array of site information as per Jirafe API spec
      */
-    public function getSites()
+    public static function getSites()
     {
         // Return an array of sites, even though there is just 1 site in Prestashop
         $sites = array();
@@ -104,19 +106,25 @@ class PsApi
         // Get the Jirafe specific information about Prestashop sites
         $jirafeSites = Configuration::get('JIRAFE_SITES');
         
-        // Get the Prestashop Currencies
-        $psCurrencies = PsApi::getPsCurrencies();
-        
         $site = array();
         $site['external_id'] = 1;  // There is only 1 site in prestashop
         $site['description'] = Configuration::get('PS_SHOP_NAME');
         $site['url'] = 'http://' . Configuration::get('PS_SHOP_DOMAIN');
         $site['timezone'] = Configuration::get('PS_TIMEZONE');
-        $site['currency'] = $psCurrencies[(int)Configuration::get('PS_CURRENCY_DEFAULT')]['iso_code'];
+        $site['currency'] = PsApi::getCurrency();
 
         $sites[] = $site;
         
         return $sites;
+    }
+    
+    public static function getSiteId()
+    {
+        $sites = Configuration::get('JIRAFE_SITES');
+        $site = $sites[1];
+        $siteId = $site['site_id'];
+        
+        return $siteId;
     }
     
     /**
@@ -147,7 +155,7 @@ class PsApi
      *
      * @return array a list of active PS Employees which will be Jirafe users
      */
-    public function getPsEmployees()
+    public static function getPsEmployees()
     {
 		$dbEmployees = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('
     		SELECT `id_employee`, `email`, `firstname`, `lastname`
@@ -163,7 +171,7 @@ class PsApi
      *
      * @return array a list of PS Currencies so we can select the active one
      */
-    public function getPsCurrencies()
+    public static function getPsCurrencies()
     {
 		$dbCurrencies = Db::getInstance()->ExecuteS('
     		SELECT *
@@ -176,18 +184,60 @@ class PsApi
         return $dbCurrencies;
     }
     
+    public static function sync()
+    {
+        // Gather information neeeded to run our initial sync
+        $app = PsApi::getApplication();
+        $users = PsApi::getUsers();
+        $sites = PsApi::getSites();
+        
+        // Sync the information in PS with Jirafe
+        $results = JirafeApi::sync($app, $users, $sites);
+        
+        // Save information back in Prestashop
+        PsApi::setUsers($results['users']);
+        PsApi::setSites($results['sites']);
+    }
+    
     /**
-     * Generate a username based on the email.  This is needed because usernames and emails must be unique in Jirafe, and for now, we are not allowing multi-site access in Jirafe.
+     * Gets the default currency for this store
+     *
+     * @return string The ISO Currency code
+     */
+    public static function getCurrency()
+    {
+        // The currency ISO code
+        $currencyCode = false;
+        
+        // The default currency ID
+        $currencyId = (int)Configuration::get('PS_CURRENCY_DEFAULT');
+        
+        // All active currencies in Prestashop
+        $psCurrencies = PsApi::getPsCurrencies();
+        
+        // Loop through till we find the correct currency
+        foreach ($psCurrencies as $psCurrency) {
+            if ($psCurrency['id_currency'] == $currencyId) {
+                $currencyCode = $psCurrency['iso_code'];
+                break;
+            }
+        }
+        
+        return $currencyCode;
+    }
+    
+    /**
+     * Get a unique username based on the email and the Jirafe token for this site.  This is needed because usernames and emails must be unique in Jirafe, and for now, we are not allowing multi-site access in Jirafe.
      *
      * @return string the username generated from the application token and email, so should be unique across all Jirafe sites
      */
-    public function generateUsername($email)
+    public static function getUsername($email)
     {
         $token = Configuration::get('JIRAFE_TOKEN');
-        return substr($app['token'], 0, 6) . '_' . $email;
+        return substr($token, 0, 6) . '_' . $email;
     }
     
-    private function getPiwikVisitorType()
+    private static function getPiwikVisitorType()
 	{
 		// Todo
 		$phpSelf = isset($_SERVER['PHP_SELF']) ? substr($_SERVER['PHP_SELF'], strlen(__PS_BASE_URI__)) : '';
