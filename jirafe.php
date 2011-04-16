@@ -1,5 +1,11 @@
 <?php
 
+// Set to true if you want to debug the Jirafe API
+define ('JIRAFE_DEBUG', false);
+
+// Add this to the include path so that we can use Zend_Http_Client
+set_include_path(get_include_path() . PATH_SEPARATOR. dirname(__FILE__));
+
 /*
 	REQUIREMENTS
 	
@@ -44,21 +50,59 @@ class Jirafe extends Module
 		$this->displayName = $this->l('Jirafe');
 		
 		//Short description displayed in the module list
-		$this->description = $this->l('Integrated analytics for ecommerce managers');	
+		$this->description = $this->l('Integrated analytics for ecommerce managers');
 	}
-	
+    
 	//You must implement the following methods if your module need to create a table, add configuration variables, or hook itself somewhere.
 	//-------------------------------
 	public function install()
 	{
-		return (parent::install()
-            && $this->registerHook('header')
-            && $this->registerHook('backOfficeHome');
+        // Get the application information needed by Jirafe
+        $app = PsApi::getApplication();
+
+        // Check if there is a token (probably not since we are installing) and if not, get one from Jirafe
+        if (empty($app['token'])) {
+
+            // Create the application in Jirafe
+            $app = JirafeApi::createApplication($app);
+            
+            // Set the application information in Prestashop
+            PsApi::setApplication($app);
+        }
+        
+        // Gather information neeeded to run our initial sync
+        $users = PsApi::getUsers();
+        $sites = PsApi::getSites();
+        
+        // Sync the information in PS with Jirafe
+        $results = JirafeApi::sync($app, $users, $sites);
+        
+        // Save information back in Prestashop
+        PsApi::setUsers($results['users']);
+        PsApi::setSites($results['sites']);
+        
+        // Add hooks for stats and tags
+		return (
+            parent::install()  // Get Jirafe ID, perform initial sync
+//            && $this->registerHook('backOfficeHeader')  // Check to see if we should sync
+            && $this->registerHook('header')  // Install Jirafe tags
+//            && $this->registerHook('productfooter')  // Product specific information
+//            && $this->registerHook('home')  // Do we need this?
+//            && $this->registerHook('shoppingCartExtra')  // Shopping cart information
+//            && $this->registerHook('orderConfirmation'));  // Goal tracking
+        );
 	}
-	
+    
 	public function uninstall()
 	{
-		return parent::uninstall();
+		if (!Configuration::deleteByName('JIRAFE_TOKEN')
+            || !Configuration::deleteByName('JIRAFE_ID')
+            || !Configuration::deleteByName('JIRAFE_SITES')
+            || !Configuration::deleteByName('JIRAFE_USERS')
+            || !parent::uninstall()) {
+			return false;
+        }
+		return true;
 	}
 	//-------------------------------
 	
@@ -89,61 +133,18 @@ class Jirafe extends Module
 		<div class="clear">&nbsp;</div>';
 		return $html;
 	}
-	
-	private function getPiwikVisitorType()
-	{
-		// Todo
-		$phpSelf = isset($_SERVER['PHP_SELF']) ? substr($_SERVER['PHP_SELF'], strlen(__PS_BASE_URI__)) : '';
-		switch ($phpSelf)
-		{
-			// Homepage tag
-			case 'index.php':
-				return 42;
-			// Product page tag
-			case 'product.php':
-				return 42;
-			// Order funnel tag
-			case 'order.php':
-			case 'order-opc.php':
-				return 42;
-			// Order confirmation tag
-			case 'order-confirmation.php':
-				return 42;
-			// Default tag
-			default:
-				return 42;
-		}
-	}
-	
-    public function hookBackOfficeHome($params)
-    {
-        
-    }
+
 	public function hookHeader($params)
 	{
-		// <script type="text/javascript" src="'.__PS_BASE_URI__.'modules/'.$this->name.'/piwik.js"></script>
-		$html = '
-		<script type="text/javascript">
-			var _paq = _paq || [];
-			(function(){
-				_paq.push([\'setSiteId\', '.(int)Configuration::get('JIRAFE_SITE_ID').']);
-				_paq.push([\'setTrackerUrl\', \''.__PS_BASE_URI__.'modules/'.$this->name.'/piwik.php\']);
-				_paq.push([\'enableLinkTracking\']);
-				_paq.push([\'setCustomVariable\',\'1\',\'U\',\''.addslashes($this->getPiwikVisitorType()).'\']);
-				_paq.push([\'trackPageView\']);
-				
-				var d=document,
-					g=d.createElement(\'script\'),
-					s=d.getElementsByTagName(\'script\')[0];
-					g.type=\'text/javascript\';
-					g.defer=true;
-					g.async=true;
-					g.src=\''.__PS_BASE_URI__.'modules/'.$this->name.'/piwik.js\';
-					s.parentNode.insertBefore(g,s);
-			})();
-		</script>';
-		return $html;
-	}
+        // Set some variables needed to generate the ad tag
+        $siteId = (int)Configuration::get('JIRAFE_SITES')[1]['site_id'];
+        $visitorType = PsApi::getVisitorType();
+        
+        // Get the HTML
+        $html = JirafeApi::getTag($siteId, $trackerPath, $visitorType);
+        
+        return $html;
+    }
 }
 
 ?>
