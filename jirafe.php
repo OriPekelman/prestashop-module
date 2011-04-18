@@ -6,6 +6,7 @@ define ('JIRAFE_DEBUG', false);
 // Include the other Jirafe files
 include_once 'PsApi.php';
 include_once 'JirafeApi.php';
+include_once 'PiwikTracker.php';
 
 /*
 	REQUIREMENTS
@@ -88,9 +89,10 @@ class Jirafe extends Module
     
 	public function uninstall()
 	{
-		if (!Configuration::deleteByName('JIRAFE_TOKEN')
-            || !Configuration::deleteByName('JIRAFE_ID')
+		if (!Configuration::deleteByName('JIRAFE_ID')
             || !Configuration::deleteByName('JIRAFE_SITES')
+            || !Configuration::deleteByName('JIRAFE_SYNC')
+            || !Configuration::deleteByName('JIRAFE_TOKEN')
             || !Configuration::deleteByName('JIRAFE_USERS')
             || !parent::uninstall()) {
 			return false;
@@ -135,40 +137,14 @@ class Jirafe extends Module
      */
     public function hookBackOfficeTop($params)
     {
-        $sync = false;
-        // Saving employee information
-        if (!empty($_GET['submitAddemployee'])) {
-            // Always sync a new user
-            if (empty($_POST['id_employee'])) {
-                $sync = true;
-            } else {
-                // For now always sync when a user is saved.  Modify in the future to only save when something we care about changes
-                $sync = true;
-            }
-        }
-        
-        // Saving general configuration (enable store, timezone)
-        if (!empty($_GET['submitgeneralconfiguration'])) {
-            // This is the list of fields we care about
-            $fields = array('PS_SHOP_ENABLE', 'PS_TIMEZONE');
-            // Loop through the fields to see if any changed
-            foreach ($fields as $field) {
-                if ($_POST[$field] != Configuration::get($field)) {
-                    $sync = true;
-                }
-            }
-        }
-        
-        // Saving currencies
-        if (!empty($_GET['submitOptionscurrency'])) {
-            if ($_POST['PS_CURRENCY_DEFAULT'] != Configuration::get('PS_CURRENCY_DEFAULT')) {
-                $sync = true;
-            }
-        }
-        
-        // If we need to sync, then sync!
-        if ($sync) {
+        // Back Office Top hook is called twice - once before saving, and once after.  So, when we initially come here, we have not saved yet.
+        //  We just set a flag.  The second time we come here, we have already saved, and so we check the flag and sync.
+        if (Configuration::get('JIRAFE_SYNC')) {
+            Configuration::updateValue('JIRAFE_SYNC', false);
             PsApi::sync();
+        }
+        if (PsApi::checkSync($params)) {
+            Configuration::updateValue('JIRAFE_SYNC', true);
         }
     }
     
@@ -182,7 +158,7 @@ class Jirafe extends Module
 	{
         // Set some variables needed to generate the ad tag
         $siteId = PsApi::getSiteId();
-        $visitorType = PsApi::getVisitorType();
+        $visitorType = PsApi::getVisitorType($siteId);
         
         // Get the HTML
         $html = '

@@ -9,7 +9,7 @@ class PsApi
     {
         $data = array(
             'name' => Configuration::get('PS_SHOP_NAME'),
-            'url' => 'http://' . Configuration::get('PS_SHOP_DOMAIN')
+            'url' => Tools::getShopDomain(true)
         );
         
         $token = Configuration::get('JIRAFE_TOKEN');
@@ -48,7 +48,7 @@ class PsApi
         $psEmployees = PsApi::getPsEmployees();
 
         // Get the Jirafe specific information about PS Employees
-        $jirafeUsers = Configuration::get('JIRAFE_USERS');
+        $jirafeUsers = unserialize(base64_decode(Configuration::get('JIRAFE_USERS')));
         
         foreach ($psEmployees as $psEmployee) {
             
@@ -90,7 +90,7 @@ class PsApi
             }
         }
         
-        Configuration::updateValue('JIRAFE_USERS', $jirafeUsers);
+        Configuration::updateValue('JIRAFE_USERS', base64_encode(serialize($jirafeUsers)));
     }
     
     /**
@@ -104,7 +104,7 @@ class PsApi
         $sites = array();
         
         // Get the Jirafe specific information about Prestashop sites
-        $jirafeSites = Configuration::get('JIRAFE_SITES');
+        $jirafeSites = unserialize(base64_decode(Configuration::get('JIRAFE_SITES')));
         
         $site = array();
         $site['external_id'] = 1;  // There is only 1 site in prestashop
@@ -121,6 +121,8 @@ class PsApi
     public static function getSiteId()
     {
         $sites = Configuration::get('JIRAFE_SITES');
+        $sites = base64_decode($sites);
+        $sites = unserialize($sites);
         $site = $sites[1];
         $siteId = $site['site_id'];
         
@@ -147,7 +149,7 @@ class PsApi
             }
         }
         
-        Configuration::updateValue('JIRAFE_SITES', $jirafeSites);
+        Configuration::updateValue('JIRAFE_SITES', base64_encode(serialize($jirafeSites)));
     }
     
     /**
@@ -184,6 +186,49 @@ class PsApi
         return $dbCurrencies;
     }
     
+    /**
+     * Check to see if something is about to change, so that we can sync
+     */
+    public static function checkSync($params)
+    {
+        $sync = false;
+        
+        // Saving employee information
+        if (Tools::isSubmit('submitAddemployee')) {
+            // Always sync a new user
+            if (empty($_POST['id_employee'])) {
+                $sync = true;
+            } else {
+                // For now always sync when a user is saved.  Modify in the future to only save when something we care about changes
+                $sync = true;
+            }
+        }
+        
+        // Saving general configuration (enable store, timezone)
+        if (Tools::isSubmit('submitgeneralconfiguration')) {
+            // This is the list of fields we care about
+            $fields = array('PS_SHOP_ENABLE', 'PS_TIMEZONE');
+            // Loop through the fields to see if any changed
+            foreach ($fields as $field) {
+                if ($_POST[$field] != Configuration::get($field)) {
+                    $sync = true;
+                }
+            }
+        }
+        
+        // Saving currencies
+        if (Tools::isSubmit('submitOptionscurrency')) {
+            if ($_POST['PS_CURRENCY_DEFAULT'] != Configuration::get('PS_CURRENCY_DEFAULT')) {
+                $sync = true;
+            }
+        }
+        
+        return $sync;
+    }
+    
+    /**
+     * Sync Prestashop information with Jirafe information
+     */
     public static function sync()
     {
         // Gather information neeeded to run our initial sync
@@ -237,29 +282,34 @@ class PsApi
         return substr($token, 0, 6) . '_' . $email;
     }
     
-    private static function getPiwikVisitorType()
+    public static function getVisitorType($siteId)
 	{
-		// Todo
-		$phpSelf = isset($_SERVER['PHP_SELF']) ? substr($_SERVER['PHP_SELF'], strlen(__PS_BASE_URI__)) : '';
-		switch ($phpSelf)
+        // Ask Piwik to get the cookie values
+        $tracker = new PiwikTracker($siteId);
+        // Retrieve the variable
+        $avt = $tracker->getCustomVariable(1);  // hard coded to the first custom variable slot
+        $vt = (!empty($avt[1]) && (strpos('ABCDE', $avt[1]) !== false)) ? $avt[1] : '';
+        
+		$page = isset($_SERVER['PHP_SELF']) ? substr($_SERVER['PHP_SELF'], strlen(__PS_BASE_URI__)) : '';
+		switch ($page)
 		{
-			// Homepage tag
-			case 'index.php':
-				return 42;
 			// Product page tag
-			case 'product.php':
-				return 42;
+			case 'product.php': $vtnew = (empty($vt) ? 'A' : 'C'); break;
 			// Order funnel tag
 			case 'order.php':
-			case 'order-opc.php':
-				return 42;
+			case 'order-opc.php': $vtnew = 'D'; break;
 			// Order confirmation tag
-			case 'order-confirmation.php':
-				return 42;
+			case 'order-confirmation.php': $vtnew = 'E'; break;
 			// Default tag
-			default:
-				return 42;
+			default: $vtnew = (empty($vt) ? 'A' : 'B');
 		}
+        
+        // You cannot revert a visit to a lesser level
+        if (!empty($vt) && ($vtnew < $vt)) {
+            $vtnew = $vt;
+        }
+        
+        return $vtnew;
 	}
 }
 
