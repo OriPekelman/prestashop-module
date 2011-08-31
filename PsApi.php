@@ -60,7 +60,7 @@ class PsApi
             
             // Set the information into the user
             $user = array(
-                'email' => $username,
+                'email' => $psEmployee['email'],
                 'username' => $username,
                 'first_name' => $psEmployee['firstname'],
                 'last_name' => $psEmployee['lastname']
@@ -227,24 +227,6 @@ class PsApi
     }
     
     /**
-     * Sync Prestashop information with Jirafe information
-     */
-    public static function sync()
-    {
-        // Gather information neeeded to run our initial sync
-        $app = PsApi::getApplication();
-        $users = PsApi::getUsers();
-        $sites = PsApi::getSites();
-        
-        // Sync the information in PS with Jirafe
-        $results = JirafeApi::sync($app, $users, $sites);
-        
-        // Save information back in Prestashop
-        PsApi::setUsers($results['users']);
-        PsApi::setSites($results['sites']);
-    }
-    
-    /**
      * Gets the default currency for this store
      *
      * @return string The ISO Currency code
@@ -281,7 +263,7 @@ class PsApi
         $token = Configuration::get('JIRAFE_TOKEN');
         return substr($token, 0, 6) . '_' . $email;
     }
-    
+/*    
     public static function getVisitorType($siteId)
 	{
         // Ask Piwik to get the cookie values
@@ -311,6 +293,7 @@ class PsApi
         
         return $vtnew;
 	}
+*/
 }
 
 ?>
