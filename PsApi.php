@@ -3,9 +3,39 @@
 // Add this to the include path so that we can use Zend_Http_Client
 set_include_path(get_include_path() . PATH_SEPARATOR. dirname(__FILE__));
 
-class PsApi
+class Jirafe_EcommercePlatform_Prestashop
 {
-    public static function getApplication()
+    /**
+     * Get the value of a variable
+     * @param name the name of the variable
+     * @return the value of the variable
+     */
+    public function get($name)
+    {
+        return Configuration::get('JIRAFE_'.strtoupper($name));
+    }
+    
+    /**
+     * Set a variable to a value
+     * @param name the name of the variable
+     * @param value the value in which to set the variable
+     */
+    public function set($name, $value)
+    {
+        Configuration::updateValue('JIRAFE_'.strtoupper($name), $value);
+    }
+    
+    /**
+     * Remove a previously saved variable
+     * @param name the name of the variable to delete
+     * @return whether the action was successful
+     */
+    public function delete($name)
+    {
+        return Configuration::deleteByName('JIRAFE_'.strtoupper($name));
+    }
+    
+    public function getApplication()
     {
         $data = array(
             'name' => Configuration::get('PS_SHOP_NAME'),
@@ -25,7 +55,7 @@ class PsApi
         return $data;
     }
     
-    public static function setApplication($app)
+    public function setApplication($app)
     {
         if (!empty($app['app_id'])) {
             Configuration::updateValue('JIRAFE_ID', $app['app_id']);
@@ -40,7 +70,7 @@ class PsApi
      *
      * @return array A list of Jirafe users
      */
-    public static function getUsers()
+    public function getUsers()
     {
         $users = array();
         
@@ -78,7 +108,7 @@ class PsApi
         return $users;
     }
     
-    public static function setUsers($users)
+    public function setUsers($users)
     {
         $jirafeUsers = array();
         
@@ -98,7 +128,7 @@ class PsApi
      *
      * @return array $sites An array of site information as per Jirafe API spec
      */
-    public static function getSites()
+    public function getSites()
     {
         // Return an array of sites, even though there is just 1 site in Prestashop
         $sites = array();
@@ -118,7 +148,7 @@ class PsApi
         return $sites;
     }
     
-    public static function getSiteId()
+    public function getSiteId()
     {
         $sites = Configuration::get('JIRAFE_SITES');
         $sites = base64_decode($sites);
@@ -134,7 +164,7 @@ class PsApi
      *
      * @param array $sites An array of site information as per Jirafe API spec
      */
-    public static function setSites($sites)
+    public function setSites($sites)
     {
         $jirafeSites = array();
         
@@ -157,7 +187,7 @@ class PsApi
      *
      * @return array a list of active PS Employees which will be Jirafe users
      */
-    public static function getPsEmployees()
+    public function getPsEmployees()
     {
 		$dbEmployees = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('
     		SELECT `id_employee`, `email`, `firstname`, `lastname`
@@ -173,7 +203,7 @@ class PsApi
      *
      * @return array a list of PS Currencies so we can select the active one
      */
-    public static function getPsCurrencies()
+    public function getPsCurrencies()
     {
 		$dbCurrencies = Db::getInstance()->ExecuteS('
     		SELECT *
@@ -189,7 +219,7 @@ class PsApi
     /**
      * Check to see if something is about to change, so that we can sync
      */
-    public static function checkSync($params)
+    public function isDataChanged($params)
     {
         $sync = false;
         
@@ -231,7 +261,7 @@ class PsApi
      *
      * @return string The ISO Currency code
      */
-    public static function getCurrency()
+    public function getCurrency()
     {
         // The currency ISO code
         $currencyCode = false;
@@ -258,7 +288,7 @@ class PsApi
      *
      * @return string the username generated from the application token and email, so should be unique across all Jirafe sites
      */
-    public static function getUsername($email)
+    public function getUsername($email)
     {
         $token = Configuration::get('JIRAFE_TOKEN');
         return substr($token, 0, 6) . '_' . $email;
@@ -294,6 +324,44 @@ class PsApi
         return $vtnew;
 	}
 */
+    public function getPageType()
+    {
+        if (!empty($_GET['controller']) && !empty($_GET['id_product'])) {
+            return Jirafe_Tools::PAGE_PRODUCT;
+        }
+    }
+    
+    public function getTags($params)
+    {
+        // Set some variables needed to generate the ad tag
+        $siteId = PsApi::getSiteId();
+//        $visitorType = PsApi::getVisitorType($siteId);
+	$visitorType = 'A';
+        
+        // Get the HTML
+        $html = '
+    <script type="text/javascript">
+    var _paq = _paq || [];
+    (function(){
+        var u=(("https:" == document.location.protocol) ? "https://data.jirafe.com/" : "http://data.jirafe.com/");
+        _paq.push([\'setSiteId\', '.$siteId.']);
+        _paq.push([\'setTrackerUrl\', u+\'piwik.php\']);
+        _paq.push([\'enableLinkTracking\']);
+        _paq.push([\'setCustomVariable\',\'1\',\'U\',\''.$visitorType.'\']);
+        _paq.push([\'trackPageView\']);
+        
+        var d=document,
+            g=d.createElement(\'script\'),
+            s=d.getElementsByTagName(\'script\')[0];
+            g.type=\'text/javascript\';
+            g.defer=true;
+            g.async=true;
+            g.src=u+\'piwik.js\';
+            s.parentNode.insertBefore(g,s);
+    })();
+    </script>';
+    
+    }
 }
 
 ?>
