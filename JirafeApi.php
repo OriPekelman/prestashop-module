@@ -53,7 +53,7 @@ class JirafeApi
         
         // Get the URL that we would like to request
         if (JirafeApi::$debug) {
-            $url = "https://api.jirafe.local/app_dev.php/v1/$method";
+            $url = "https://test-api.jirafe.com/v1/$method";
         } else {
             $url = "https://api.jirafe.com/v1/$method";
         }
