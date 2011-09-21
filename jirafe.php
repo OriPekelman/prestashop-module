@@ -38,9 +38,9 @@ class Jirafe extends Module
     public function __construct()
     {
         // Require/Autoload the other files
-        require_once _PS_MODULE_DIR_ . '/jirafe/vendor/jirafe-php-client/src/Jirafe/Autoloader.php';
-        require_once _PS_MODULE_DIR_ . '/jirafe/JirafeDashboardTab.php';
-        require_once _PS_MODULE_DIR_ . '/jirafe/PiwikTracker.php';
+        require_once _PS_MODULE_DIR_ . 'jirafe/vendor/jirafe-php-client/src/Jirafe/Autoloader.php';
+        require_once _PS_MODULE_DIR_ . 'jirafe/JirafeDashboardTab.php';
+//        require_once _PS_MODULE_DIR_ . 'jirafe/PiwikTracker.php';
         
         Jirafe_Autoloader::register();
         spl_autoload_register('__autoload');  // Re-register the default autoloader used by Prestashop (or ours will be the only autoloader)
@@ -129,7 +129,7 @@ class Jirafe extends Module
 //            && $this->registerHook('productfooter')  // Product specific information
 //            && $this->registerHook('home')  // Do we need this?
 //            && $this->registerHook('shoppingCartExtra')  // Shopping cart information
-//            && $this->registerHook('orderConfirmation'));  // Goal tracking
+            && $this->registerHook('orderConfirmation')    // Goal tracking
         );
     }
     
@@ -249,6 +249,27 @@ class Jirafe extends Module
         
         // Log the cart update for this visitor
         $ps->logCartUpdate($cart);
+    }
+    
+    /**
+     * Hook which gets called when a user makes a new order
+     * We then send Jirafe the order information
+     *
+     * @param array $params variables from the front end
+     */
+    public function hookOrderConfirmation($params)
+    {
+        // Get the ecommerce client
+        $ps = $this->prestashopClient;
+        
+        // First get the details of the order to log to the server
+        $order = $ps->getOrder($params);
+
+        // Then get the details of the visitor
+        //$visitor = $ps->getVisitor($params);
+        
+        // Log the order for this visitor
+        $ps->logOrder($order);
     }
 }
 
