@@ -67,19 +67,6 @@ class Jirafe extends Module
         
         // Confirmation of uninstall
         $this->confirmUninstall = $this->l('Are you sure you want to remove Jirafe analytics integration for your site?');
-        
-        // Prestashop Ecommerce Client
-        $ps = new Jirafe_Platform_Prestashop();
-        $this->prestashopClient = $ps;
-        
-        // Jirafe Client
-        if (JIRAFE_DEBUG) {
-            $ps->trackerUrl = 'test-data.jirafe.com';
-            $connection = new Jirafe_HttpConnection_Curl('https://test-api.jirafe.com/v1',443);
-            $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
-        } else {
-            $this->jirafeClient = new Jirafe_Client($ps->get('token'));
-        }
     }
     
     //You must implement the following methods if your module need to create a table, add configuration variables, or hook itself somewhere.
@@ -97,8 +84,8 @@ class Jirafe extends Module
             $tab->add();
         }
 
-        $ps = $this->prestashopClient;
-        $jf = $this->jirafeClient;
+        $ps = $this->getPrestashopClient();
+        $jf = $this->getjirafeClient();
         
         // Get the application information needed by Jirafe
         $app = $ps->getApplication();
@@ -124,6 +111,7 @@ class Jirafe extends Module
         return (
             parent::install()  // Get Jirafe ID, perform initial sync
             && $this->registerHook('backOfficeTop')  // Check to see if we should sync
+            && $this->registerHook('backOfficeHeader')  // Add dashboard script
             && $this->registerHook('header')         // Install Jirafe tags
             && $this->registerHook('cart')           // When adding items to the cart
 //            && $this->registerHook('productfooter')  // Product specific information
@@ -146,7 +134,7 @@ class Jirafe extends Module
             $tab->delete();
         }
         
-        $ps = $this->prestashopClient;
+        $ps = $this->getPrestashopClient();
         
         if (!$ps->delete('app_id')
             || !$ps->delete('sites')
@@ -188,7 +176,43 @@ class Jirafe extends Module
 		<div class="clear">&nbsp;</div>';
         return $html;
     }
+    
+    public function getPrestashopClient()
+    {
+        if (null === $this->prestashopClient) {
+            // Prestashop Ecommerce Client
+            $this->prestashopClient = new Jirafe_Platform_Prestashop();
 
+            if (JIRAFE_DEBUG) {
+                $this->prestashopClient->trackerUrl = 'test-data.jirafe.com';
+            }
+        }
+        
+        return $this->prestashopClient;
+    }
+    
+    public function getJirafeClient()
+    {
+        if (null === $this->jirafeClient) {
+            $ps = $this->getPrestashopClient();
+            // Create Jirafe Client
+            if (JIRAFE_DEBUG) {
+                $connection = new Jirafe_HttpConnection_Curl('https://test-api.jirafe.com/v1',443);
+                $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
+            } else {
+                $this->jirafeClient = new Jirafe_Client($ps->get('token'));
+            }
+        }
+        
+        return $this->jirafeClient;
+    }
+
+    public function hookBackOfficeHeader($params)
+    {
+        return '
+    <link type="text/css" rel="stylesheet" href="https://test-api.jirafe.com/bundles/jirafedashboard/css/magento_ui.css" media="all" />
+    <script type="text/javascript" src="https://test-api.jirafe.com/bundles/jirafedashboard/js/magento_ui.js"></script>';
+    }
     /**
      * Check to see if someone saved something we need to update Jirafe about
      *
@@ -197,7 +221,7 @@ class Jirafe extends Module
      */
     public function hookBackOfficeTop($params)
     {
-        $ps = $this->prestashopClient;
+        $ps = $this->getPrestashopClient();
         
         // Back Office Top hook is called twice - once before saving, and once after.  So, when we initially come here, we have not saved yet.
         //  We just set a flag.  The second time we come here, we have already saved, and so we check the flag and sync.
@@ -205,9 +229,10 @@ class Jirafe extends Module
         if ($ps->get('sync')) {
             $ps->set('sync', false);
             
+            $jf = $this->getJirafeClient();
             // Sync the changes
             $app = $ps->getApplication();
-            $results = $this->jirafeClient->applications($ps->get('app_id'))->resources()->sync($ps->getSites(), $ps->getUsers());
+            $results = $jf->applications($ps->get('app_id'))->resources()->sync($ps->getSites(), $ps->getUsers());
             
             // Save information back in Prestashop
             $ps->setUsers($results['users']);
@@ -226,7 +251,7 @@ class Jirafe extends Module
      */
     public function hookHeader($params)
     {
-        $ps = $this->prestashopClient;
+        $ps = $this->getPrestashopClient();
         return $ps->getTag();
     }
     
@@ -239,7 +264,7 @@ class Jirafe extends Module
     public function hookCart($params)
     {
         // Get the ecommerce client
-        $ps = $this->prestashopClient;
+        $ps = $this->getPrestashopClient();
         
         // First get the details of the cart to log to the server
         $cart = $ps->getCart($params);
@@ -260,7 +285,7 @@ class Jirafe extends Module
     public function hookOrderConfirmation($params)
     {
         // Get the ecommerce client
-        $ps = $this->prestashopClient;
+        $ps = $this->getPrestashopClient();
         
         // First get the details of the order to log to the server
         $order = $ps->getOrder($params);
