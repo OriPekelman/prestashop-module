@@ -24,7 +24,18 @@ To enable the Jirafe module for Prestashop, log into prestashop, click on the 'M
 
 ## For developers only
 
+### Uninstallation
+
 To manually remove the plugin data from the prestashop database:
 
     DELETE FROM configuration WHERE name LIKE 'JIRAFE%';
     DELETE FROM module WHERE name = 'jirafe';
+
+To remove the module from the prestashop platform:
+
+    rm -rf (path_to_prestashop_platform)/modules/jirafe
+    
+To create a clean zip file of the Jirafe module for Prestashop:
+
+    cd (path_to_jirafe_module)
+    zip -r ../jirafe.zip . -x *.git*
