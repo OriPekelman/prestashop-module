@@ -12,7 +12,7 @@ class JirafeDashboardTab extends AdminTab
     
 	public function display()
 	{
-		global $cookie;
+/*		global $cookie;
 		$this->warnDomainName();
 
 		$tab = get_class();
@@ -22,6 +22,7 @@ class JirafeDashboardTab extends AdminTab
 		$isoCountry = Country::getIsoById(Configuration::get('PS_COUNTRY_DEFAULT'));
 		$currency = new Currency((int)(Configuration::get('PS_CURRENCY_DEFAULT')));
                 $title = $this->l('Dashboard');
+*/
                 $apiUrl = 'https://api.jirafe.com/v1';
                 $ps = $this->jirafe->getPrestashopClient();
                 $token = $ps->get('token');
