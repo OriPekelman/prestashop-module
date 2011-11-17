@@ -35,8 +35,8 @@ To create a clean zip file of the Jirafe module for Prestashop:
 
 To manually remove the plugin data from the prestashop database:
 
-    DELETE FROM configuration WHERE name LIKE 'JIRAFE%';
-    DELETE FROM module WHERE name = 'jirafe';
+    DELETE FROM ps_configuration WHERE name LIKE 'JIRAFE%';
+    DELETE FROM ps_module WHERE name = 'jirafe';
 
 To remove the module from the prestashop platform:
 

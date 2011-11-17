@@ -1,32 +1,11 @@
 <?php
 
-if (!defined('_CAN_LOAD_FILES_'))
-	exit;
+if (!defined('_PS_VERSION_') || !defined('_CAN_LOAD_FILES_'))
+    exit;
 
 // Set to true if you want to debug the Jirafe API in the test sandbox
 define ('JIRAFE_DEBUG', true);
 
-/*
-    REQUIREMENTS
-    
-    Use E_STRICT as error reporting level.
-    In php.ini:
-        - error_reporting = E_ALL | E_STRICT
-        - display_errors = On
-        
-    The name of the module folder and mail PHP file must be in lower case (Windows may not be case sensitive, but Unix based OS are).
-    Use the following folder architecture
-    - module folder
-        -> module file (same name than the module folder with .php at the end)
-        -> images folder
-        -> css folder
-        -> logo.gif (16x16, will appear in the module list of the back office)
-    Do not forget to translate your module.
-    Do not forget to remove hidden files (like .svn, .DS_store, .Thumbs) or temporary files (#file#, file~)
-
-    If you want to use Ajax/Javascript, use firebug (a plugin for Firefox) to debug you script and check the compatibility with all browser.
-*/
-    
 //Your class must have the same name than this file.
 class Jirafe extends Module
 {
@@ -39,40 +18,30 @@ class Jirafe extends Module
     {
         // Require/Autoload the other files
         require_once _PS_MODULE_DIR_ . 'jirafe/vendor/jirafe-php-client/src/Jirafe/Autoloader.php';
-        require_once _PS_MODULE_DIR_ . 'jirafe/JirafeDashboardTab.php';
-//        require_once _PS_MODULE_DIR_ . 'jirafe/PiwikTracker.php';
-        
         Jirafe_Autoloader::register();
         spl_autoload_register('__autoload');  // Re-register the default autoloader used by Prestashop (or ours will be the only autoloader)
         
-        //Name of your module. It must have the same name than the class
         $this->name = 'jirafe';
-        
-        //You must choose an existing tab amongst the ones that are available
         $this->tab = 'analytics_stats';
-        $this->tabClassName = 'JirafeDashboardTab';
-        $this->tabParentName = ''; //in this example you add subtab under Tools tab. You may also declare new tab here
-        
-        //The version of your module. Do not forget to increment the version for each modification
-        $this->version = '1.1';
+        $this->version = '1.2';
         
         //The constructor must be called after the name has been set, but before you try to use any functions like $this->l()
         parent::__construct();
         
-        //Name displayed in the module list
-        $this->displayName = $this->l('Jirafe Analytics');
+        $this->page = basename(__FILE__, '.php');
         
-        //Short description displayed in the module list
-        $this->description = $this->l('Integrated analytics for ecommerce managers');
+        $this->author = $this->l('Jirafe Inc.');
+        $this->displayName = $this->l('Jirafe Analytics');
+        $this->description = $this->l('The best analytics for ecommerce merchants.  Deeply integrated in the Prestashop platform.');
         
         // Confirmation of uninstall
         $this->confirmUninstall = $this->l('Are you sure you want to remove Jirafe analytics integration for your site?');
     }
     
-    //You must implement the following methods if your module need to create a table, add configuration variables, or hook itself somewhere.
-    //-------------------------------
     public function install()
     {
+        /*
+        $id_tab = Tab::getIdFromClassName($this->tabClassName);
         if (!$id_tab) {
             $tab = new Tab();
             $tab->class_name = $this->tabClassName;
@@ -83,6 +52,8 @@ class Jirafe extends Module
                 $tab->name[$language['id_lang']] = $this->displayName;
             $tab->add();
         }
+        
+        */
 
         $ps = $this->getPrestashopClient();
         $jf = $this->getjirafeClient();
@@ -91,7 +62,7 @@ class Jirafe extends Module
         $app = $ps->getApplication();
 
         // Check if there is a token (probably not since we are installing) and if not, get one from Jirafe
-        if (null === $app['token']) {
+        if (empty($app['token'])) {
             $app = $jf->applications()->create($app['name'], $app['url']);
             
             // Set the application information in Prestashop
@@ -114,41 +85,55 @@ class Jirafe extends Module
             && $this->registerHook('backOfficeHeader')  // Add dashboard script
             && $this->registerHook('header')         // Install Jirafe tags
             && $this->registerHook('cart')           // When adding items to the cart
-//            && $this->registerHook('productfooter')  // Product specific information
-//            && $this->registerHook('home')  // Do we need this?
-//            && $this->registerHook('shoppingCartExtra')  // Shopping cart information
             && $this->registerHook('orderConfirmation')    // Goal tracking
+            && $ps->set('logo', 'http://jirafe.com/bundles/jirafewebsite/images/logo.png') 
+            && self::installAdminDashboard()
         );
     }
     
-    public function viewAccess($disable = false) {
-            $result = true;
-            return $result;
+    private function installAdminDashboard()
+    {
+        @copy(_PS_MODULE_DIR_.$this->name.'/logo.gif', _PS_IMG_DIR_.'t/'.$tabClass.'.gif');
+        $tab = new Tab();
+        $tab->name = array(1=>'Jirafe Analytics', 2=>'Mon onglet tutoriel');
+        $tab->class_name = 'AdminJirafeDashboard';
+        $tab->module = 'jirafe';
+        $tab->id_parent = 0;
+        return $tab->add();
     }
-
+    
     public function uninstall()
     {
-        $id_tab = Tab::getIdFromClassName($this->tabClassName);
-        if ($id_tab) {
-            $tab = new Tab($id_tab);
-            $tab->delete();
-        }
-        
         $ps = $this->getPrestashopClient();
         
-        if (!$ps->delete('app_id')
-            || !$ps->delete('sites')
-            || !$ps->delete('users')
-            || !$ps->delete('sync')
-            || !$ps->delete('token')
-            || !parent::uninstall()) {
-            return false;
-        }
-        return true;
+        // Remove values in the DB
+        return (
+            parent::uninstall()
+            && $ps->delete('app_id')
+            && $ps->delete('sites')
+            && $ps->delete('users')
+            && $ps->delete('sync')
+            && $ps->delete('token')
+            && $ps->delete('logo')
+            && $this->unregisterHook('backOfficeTop')  // Check to see if we should sync
+            && $this->unregisterHook('backOfficeHeader')  // Add dashboard script
+            && $this->unregisterHook('header')         // Install Jirafe tags
+            && $this->unregisterHook('cart')           // When adding items to the cart
+            && $this->unregisterHook('orderConfirmation')    // Goal tracking
+            && $this->uninstallAdminDashboard()
+        );
     }
     
-    //-------------------------------
-    
+    private function uninstallAdminDashboard()
+    {
+        $tab = new Tab(Tab::getIdFromClassName('AdminJirafeDashboard'));
+        
+        return (
+            parent::uninstall()
+            && $tab->delete()
+        );
+    }
+
     //Display Configuration page of your module.
     public function getContent()
     {

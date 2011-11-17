@@ -1,12 +1,11 @@
 <?php
 
-class JirafeDashboardTab extends AdminTab
+include_once('jirafe.php');
+
+class AdminJirafeDashboard extends AdminTab
 {
     public function __construct()
     {
-        require_once _PS_MODULE_DIR_ . 'jirafe/jirafe.php';
-        
-        $this->jirafe = new Jirafe();
         parent::__construct();
     }
     
@@ -23,8 +22,10 @@ class JirafeDashboardTab extends AdminTab
 		$currency = new Currency((int)(Configuration::get('PS_CURRENCY_DEFAULT')));
                 $title = $this->l('Dashboard');
 */
+	        $jirafe = new Jirafe();
+		
                 $apiUrl = 'https://api.jirafe.com/v1';
-                $ps = $this->jirafe->getPrestashopClient();
+                $ps = $jirafe->getPrestashopClient();
                 $token = $ps->get('token');
                 $appId = $ps->get('app_id');
                 $errMsg = $this->l("We're unable to connect with the Jirafe service for the moment. Please wait a few minutes and refresh this page later.");
