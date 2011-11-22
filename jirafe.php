@@ -195,8 +195,8 @@ class Jirafe extends Module
     public function hookBackOfficeHeader($params)
     {
         return '
-    <link type="text/css" rel="stylesheet" href="https://test-api.jirafe.com/bundles/jirafedashboard/css/magento_ui.css" media="all" />
-    <script type="text/javascript" src="https://test-api.jirafe.com/bundles/jirafedashboard/js/magento_ui.js"></script>';
+    <link type="text/css" rel="stylesheet" href="https://jirafe.com/dashboard/css/magento_ui.css" media="all" />
+    <script type="text/javascript" src="https://jirafe.com/dashboard/js/magento_ui.js"></script>';
     }
     /**
      * Check to see if someone saved something we need to update Jirafe about
