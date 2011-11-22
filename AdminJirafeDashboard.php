@@ -20,14 +20,14 @@ class AdminJirafeDashboard extends AdminTab
 		$isoUser = Language::getIsoById(intval($cookie->id_lang));
 		$isoCountry = Country::getIsoById(Configuration::get('PS_COUNTRY_DEFAULT'));
 		$currency = new Currency((int)(Configuration::get('PS_CURRENCY_DEFAULT')));
-                $title = $this->l('Dashboard');
 */
 	        $jirafe = new Jirafe();
 		
-                $apiUrl = 'https://api.jirafe.com/v1';
+		$apiUrl = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
                 $ps = $jirafe->getPrestashopClient();
                 $token = $ps->get('token');
                 $appId = $ps->get('app_id');
+                $title = $this->l('Dashboard');
                 $errMsg = $this->l("We're unable to connect with the Jirafe service for the moment. Please wait a few minutes and refresh this page later.");
                 echo <<<EOF
 <div>
