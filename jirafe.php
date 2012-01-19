@@ -197,7 +197,7 @@ class Jirafe extends Module
         return '
     <link type="text/css" rel="stylesheet" href="https://jirafe.com/dashboard/css/magento_ui.css" media="all" />
     <script type="text/javascript" src="https://jirafe.com/dashboard/js/magento_ui.js"></script>
-    <script type="text/javascript">var jirafeJQuery = jQuery.noConflict(); jQuery.noConflict(true);</script>';
+    <script type="text/javascript">var jirafeJQuery = jQuery.noConflict(true);</script>';
     }
     /**
      * Check to see if someone saved something we need to update Jirafe about
