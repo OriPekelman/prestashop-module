@@ -8,7 +8,7 @@ class AdminJirafeDashboard extends AdminTab
     {
         parent::__construct();
     }
-    
+
 	public function display()
 	{
 /*		global $cookie;
@@ -22,7 +22,7 @@ class AdminJirafeDashboard extends AdminTab
 		$currency = new Currency((int)(Configuration::get('PS_CURRENCY_DEFAULT')));
 */
 	        $jirafe = new Jirafe();
-		
+
 		$apiUrl = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
                 $ps = $jirafe->getPrestashopClient();
                 $token = $ps->get('token');
@@ -40,27 +40,28 @@ class AdminJirafeDashboard extends AdminTab
 <div id="jirafe"></div>
 <script type="text/javascript">
 <!--
-if (typeof jQuery != 'undefined') { 
+if (typeof jirafeJQuery != 'undefined') {
+
     (function($) {
          $('#jirafe').jirafe({
             api_url:    '{$apiUrl}',
             api_token:  '{$token}',
             app_id:     '{$appId}'
          });
-    })(jQuery);
+    })(jirafeJQuery);
 }
 -->
 <!--
 setTimeout(function() {
     if ($('mod-jirafe') == undefined){
         $('messages').insert ("<ul class=\"messages\"><li class=\"error-msg\">{$errMsg}</li></ul>");
-    }        
+    }
 }, 2000);
 -->
 </script>
 <!-- Jirafe Dashboard End -->
 EOF;
-	
+
 	}
 }
 ?>
