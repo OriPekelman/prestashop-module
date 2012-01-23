@@ -40,16 +40,14 @@ class AdminJirafeDashboard extends AdminTab
 <div id="jirafe"></div>
 <script type="text/javascript">
 <!--
-if (typeof jirafeJQuery != 'undefined') {
-
-    (function($) {
+    (function(jQuery) {
+        var $ = jQuery;
          $('#jirafe').jirafe({
             api_url:    '{$apiUrl}',
             api_token:  '{$token}',
             app_id:     '{$appId}'
          });
-    })(jirafeJQuery);
-}
+    })(jirafe.jQuery);
 -->
 <!--
 setTimeout(function() {
