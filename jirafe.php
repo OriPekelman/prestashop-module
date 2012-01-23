@@ -282,5 +282,3 @@ class Jirafe extends Module
         $ps->logOrder($order);
     }
 }
-
-?>
