@@ -45,7 +45,8 @@ class AdminJirafeDashboard extends AdminTab
          $('#jirafe').jirafe({
             api_url:    '{$apiUrl}',
             api_token:  '{$token}',
-            app_id:     '{$appId}'
+            app_id:     '{$appId}',
+            version:    'presta-v0.1.0'
          });
     })(jirafe.jQuery);
 -->
