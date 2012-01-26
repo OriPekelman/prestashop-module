@@ -139,26 +139,28 @@ class Jirafe extends Module
     {
         global $currentIndex;
 
+        $ps = $this->getPrestashopClient();
+
         $html = '<h2>'.$this->displayName.'</h2>';
 
         if (Tools::isSubmit('submitJirafe')) {
-                Configuration::updateValue('JIRAFE_SITE_ID', (int)Tools::getValue('JIRAFE_SITE_ID'));
-                $html .= $this->displayConfirmation($this->l('Configuration updated'));
+            $ps->set('site_id', (int)Tools::getValue('JIRAFE_SITE_ID'));
+            $html .= $this->displayConfirmation($this->l('Configuration updated'));
         }
 
         $conflink = $currentIndex.'&configure='.$this->name.'&token='.Tools::getValue('token');
         $html .= '
-		<fieldset><legend>'.$this->l('Configuration').'</legend>
-			<form action="'.htmlentities($conflink).'" method="post">
-				<label>'.$this->l('Site ID').'</label>
-				<div class="margin-form">
-					<input type="text" name="JIRAFE_SITE_ID" value="'.Tools::getValue('JIRAFE_SITE_ID', Configuration::get('JIRAFE_SITE_ID')).'" />
-				</div>
-				<div class="clear">&nbsp;</div>
-				<input type="submit" name="submitJirafe" value="'.$this->l('   Save   ').'" class="button" />
-        	</form>
-		</fieldset>
-		<div class="clear">&nbsp;</div>';
+            <fieldset><legend>'.$this->l('Configuration').'</legend>
+                <form action="'.htmlentities($conflink).'" method="post">
+                    <label>'.$this->l('Site ID').'</label>
+                    <div class="margin-form">
+                        <input type="text" name="JIRAFE_SITE_ID" value="'.Tools::getValue('JIRAFE_SITE_ID', $ps->get('site_id')).'" />
+                    </div>
+                    <div class="clear">&nbsp;</div>
+                    <input type="submit" name="submitJirafe" value="'.$this->l('   Save   ').'" class="button" />
+                </form>
+            </fieldset>
+            <div class="clear">&nbsp;</div>';
         return $html;
     }
 
@@ -222,6 +224,14 @@ class Jirafe extends Module
             // Save information back in Prestashop
             $ps->setUsers($results['users']);
             $ps->setSites($results['sites']);
+
+            // register hooks again for all sites
+            // hooks are registered per site or all sites if no arg
+            $this->registerHook('backOfficeTop');
+            $this->registerHook('backOfficeHeader');
+            $this->registerHook('header');
+            $this->registerHook('cart');
+            $this->registerHook('orderConfirmation');
         }
         if ($ps->isDataChanged($params)) {
             $ps->set('sync', true);
