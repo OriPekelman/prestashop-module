@@ -66,9 +66,11 @@ class Jirafe extends Module
         // Add hooks for stats and tags
         return (
             parent::install()  // Get Jirafe ID, perform initial sync
+            && $this->registerHook('backOfficeTop')  // Check to see if we should sync
             && $this->registerHook('actionObjectAddAfter')  // Check to see if we should sync
             && $this->registerHook('actionObjectUpdateAfter')  // Check to see if we should sync
             && $this->registerHook('actionObjectDeleteAfter')  // Check to see if we should sync
+            && $this->registerHook('actionAdminMetaSave')  // Check to see if we should sync
             && $this->registerHook('backOfficeHeader')  // Add dashboard script
             && $this->registerHook('header')         // Install Jirafe tags
             && $this->registerHook('cart')           // When adding items to the cart
@@ -102,6 +104,7 @@ class Jirafe extends Module
             && $ps->delete('sync')
             && $ps->delete('token')
             && $ps->delete('logo')
+            && $this->unregisterHook('backOfficeTop')  // Check to see if we should sync
             && $this->unregisterHook('actionObjectAddAfter')  // Check to see if we should sync
             && $this->unregisterHook('actionObjectUpdateAfter')  // Check to see if we should sync
             && $this->unregisterHook('actionObjectDeleteAfter')  // Check to see if we should sync
@@ -184,6 +187,18 @@ class Jirafe extends Module
     }
 
     /**
+    * Check to see if someone saved something we need to update Jirafe about
+    *
+    * @param array $params Information from the user, like cookie, etc
+    */
+    public function hookBackOfficeTop($params)
+    {
+        if ($this->getPrestashopClient()->isDataChanged($params)) {
+            $this->_sync();
+        }
+    }
+
+    /**
      * Check to see if someone created something we need to update Jirafe about
      */
     public function hookActionObjectAddAfter($params)
@@ -200,16 +215,13 @@ class Jirafe extends Module
      */
     public function hookActionObjectUpdateAfter($params)
     {
-        $object = $params['object'];
-        $ps = $this->getPrestashopClient();
+        // wtf? this hook is executed for each request of jirafe module page
+        // TODO: fix that
+        // TODO: add changes detection avoid useless sync
 
-        if ($object instanceof Shop) {
-            $sites = $ps->getSites();
-            foreach ($sites as $site) {
-                if ($site['external_id'] === $object->id && $site['description'] !== $object->name) {
-                    $this->_sync();
-                }
-            }
+        $object = $params['object'];
+        if ($object instanceof Employee || $object instanceof Shop) {
+            $this->_sync();
         }
     }
 
@@ -223,6 +235,13 @@ class Jirafe extends Module
         if ($object instanceof Employee || $object instanceof Shop) {
             $this->_sync();
         }
+    }
+
+    public function hookBackOfficeHeader($params)
+    {
+        return '
+            <link type="text/css" rel="stylesheet" href="https://jirafe.com/dashboard/css/prestashop_ui.css" media="all" />
+            <script type="text/javascript" src="https://jirafe.com/dashboard/js/prestashop_ui.js"></script>';
     }
 
     /**
