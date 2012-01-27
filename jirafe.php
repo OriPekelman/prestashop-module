@@ -70,7 +70,6 @@ class Jirafe extends Module
             && $this->registerHook('actionObjectAddAfter')  // Check to see if we should sync
             && $this->registerHook('actionObjectUpdateAfter')  // Check to see if we should sync
             && $this->registerHook('actionObjectDeleteAfter')  // Check to see if we should sync
-            && $this->registerHook('actionAdminMetaSave')  // Check to see if we should sync
             && $this->registerHook('backOfficeHeader')  // Add dashboard script
             && $this->registerHook('header')         // Install Jirafe tags
             && $this->registerHook('cart')           // When adding items to the cart
