@@ -14,6 +14,8 @@ class Jirafe extends Module
     // The Prestashop Client communicates with the Prestashop ecommerce platform
     private $prestashopClient;
 
+    private static $syncUpdatedObject;
+
     public function __construct()
     {
         // Require/Autoload the other files
@@ -68,6 +70,7 @@ class Jirafe extends Module
             parent::install()  // Get Jirafe ID, perform initial sync
             && $this->registerHook('backOfficeTop')  // Check to see if we should sync
             && $this->registerHook('actionObjectAddAfter')  // Check to see if we should sync
+            && $this->registerHook('actionObjectUpdateBefore')  // Check to see if we should sync
             && $this->registerHook('actionObjectUpdateAfter')  // Check to see if we should sync
             && $this->registerHook('actionObjectDeleteAfter')  // Check to see if we should sync
             && $this->registerHook('backOfficeHeader')  // Add dashboard script
@@ -105,6 +108,7 @@ class Jirafe extends Module
             && $ps->delete('logo')
             && $this->unregisterHook('backOfficeTop')  // Check to see if we should sync
             && $this->unregisterHook('actionObjectAddAfter')  // Check to see if we should sync
+            && $this->unregisterHook('actionObjectUpdateBefore')  // Check to see if we should sync
             && $this->unregisterHook('actionObjectUpdateAfter')  // Check to see if we should sync
             && $this->unregisterHook('actionObjectDeleteAfter')  // Check to see if we should sync
             && $this->unregisterHook('backOfficeHeader')  // Add dashboard script
@@ -209,17 +213,43 @@ class Jirafe extends Module
         }
     }
 
+    public function hookActionObjectUpdateBefore($params)
+    {
+        // do not sync all updated object by default,
+        // only if certain fields are updated
+        self::$syncUpdatedObject = false;
+
+        $object = $params['object'];
+
+        // sync only if following fields are changed
+        if ($object instanceof Employee) {
+            $employee = new Employee();
+            $oldObject = $employee->getByEmail($object->email);
+            if ($object->lastname != $oldObject->lastname ||
+            $object->firstname != $oldObject->firstname ||
+            $object->email != $oldObject->email ||
+            $object->active != $oldObject->active) {
+                self::$syncUpdatedObject = true;
+            }
+        }
+        elseif ($object instanceof Shop) {
+            $oldShop = Shop::getShop($object->id);
+            if ($object->name != $oldShop['name'] || $object->active != $oldShop['active']) {
+                self::$syncUpdatedObject = true;
+            }
+        }
+    }
+
     /**
      * Check to see if someone updated something we need to update Jirafe about
      */
     public function hookActionObjectUpdateAfter($params)
     {
         // wtf? this hook is executed for each request of jirafe module page
-        // TODO: fix that
-        // TODO: add changes detection avoid useless sync
 
         $object = $params['object'];
-        if ($object instanceof Employee || $object instanceof Shop) {
+
+        if (($object instanceof Employee || $object instanceof Shop) && self::$syncUpdatedObject) {
             $this->_sync();
         }
     }
