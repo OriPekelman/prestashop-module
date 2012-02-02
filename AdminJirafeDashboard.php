@@ -30,25 +30,21 @@ class AdminJirafeDashboard extends AdminTab
 <!-- Jirafe Dashboard Begin -->
 <div id="jirafe"></div>
 <script type="text/javascript">
-<!--
-    (function(jQuery) {
-        var $ = jQuery;
-         $('#jirafe').jirafe({
-            api_url:    '{$apiUrl}',
-            api_token:  '{$token}',
-            app_id:     '{$appId}',
-            locale:     '{$locale}',
-            version:    'presta-v0.1.0'
-         });
-    })(jirafe.jQuery);
--->
-<!--
+(function(jQuery) {
+    var $ = jQuery;
+     $('#jirafe').jirafe({
+        api_url:    '{$apiUrl}',
+        api_token:  '{$token}',
+        app_id:     '{$appId}',
+        locale:     '{$locale}',
+        version:    'presta-v0.1.0'
+     });
+})(jirafe.jQuery);
 setTimeout(function() {
     if ($('mod-jirafe') == undefined){
         $('messages').insert ("<ul class=\"messages\"><li class=\"error-msg\">{$errMsg}</li></ul>");
     }
 }, 2000);
--->
 </script>
 <!-- Jirafe Dashboard End -->
 EOF;
