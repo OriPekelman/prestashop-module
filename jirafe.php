@@ -225,10 +225,15 @@ class Jirafe extends Module
         if ($object instanceof Employee) {
             $employee = new Employee();
             $oldObject = $employee->getByEmail($object->email);
-            if ($object->lastname != $oldObject->lastname ||
-            $object->firstname != $oldObject->firstname ||
-            $object->email != $oldObject->email ||
-            $object->active != $oldObject->active) {
+            if ($oldObject) {
+                if ($object->lastname != $oldObject->lastname ||
+                $object->firstname != $oldObject->firstname ||
+                $object->email != $oldObject->email ||
+                $object->active != $oldObject->active) {
+                    self::$syncUpdatedObject = true;
+                }
+            } else {
+                // sync if email change
                 self::$syncUpdatedObject = true;
             }
         }
