@@ -21,7 +21,6 @@ class Jirafe extends Module
         // Require/Autoload the other files
         require_once _PS_MODULE_DIR_ . 'jirafe/vendor/jirafe-php-client/src/Jirafe/Autoloader.php';
         Jirafe_Autoloader::register();
-        spl_autoload_register('__autoload');  // Re-register the default autoloader used by Prestashop (or ours will be the only autoloader)
 
         $this->name = 'jirafe';
         $this->tab = 'analytics_stats';
