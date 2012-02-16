@@ -4,7 +4,7 @@ if (!defined('_PS_VERSION_') || !defined('_CAN_LOAD_FILES_'))
     exit;
 
 // Set to true if you want to debug the Jirafe API in the test sandbox
-define ('JIRAFE_DEBUG', true);
+define ('JIRAFE_DEBUG', false);
 
 //Your class must have the same name than this file.
 class Jirafe extends Module
