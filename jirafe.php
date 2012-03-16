@@ -32,8 +32,8 @@ class Jirafe extends Module
         $this->page = basename(__FILE__, '.php');
 
         $this->author = $this->l('Jirafe Inc.');
-        $this->displayName = $this->l('Jirafe Analytics');
-        $this->description = $this->l('The best analytics for ecommerce merchants.  Deeply integrated in the Prestashop platform.');
+        $this->displayName = $this->l('Analytics for ecommerce');
+        $this->description = $this->l('The best analytics for ecommerce merchants.  Deeply integrated into the Prestashop platform.');
 
         // Confirmation of uninstall
         $this->confirmUninstall = $this->l('Are you sure you want to remove Jirafe analytics integration for your site?');
@@ -83,12 +83,11 @@ class Jirafe extends Module
 
     private function installAdminDashboard()
     {
-        @copy(_PS_MODULE_DIR_.$this->name.'/logo.gif', _PS_IMG_DIR_.'t/'.$tabClass.'.gif');
         $tab = new Tab();
-        $tab->name = array(1=>'Jirafe Analytics', 2=>'Mon onglet tutoriel');
+        $tab->name = 'Jirafe Analytics';
         $tab->class_name = 'AdminJirafeDashboard';
         $tab->module = 'jirafe';
-        $tab->id_parent = 0;
+        $tab->id_parent = Tab::getIdFromClassName('AdminParentStats');
         return $tab->add();
     }
 
