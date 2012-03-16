@@ -32,8 +32,8 @@ class Jirafe extends Module
         $this->page = basename(__FILE__, '.php');
 
         $this->author = $this->l('Jirafe Inc.');
-        $this->displayName = $this->l('Jirafe Analytics');
-        $this->description = $this->l('The best analytics for ecommerce merchants.  Deeply integrated in the Prestashop platform.');
+        $this->displayName = $this->l('Analytics for ecommerce');
+        $this->description = $this->l('The best analytics for ecommerce merchants.  Deeply integrated into the Prestashop platform.');
 
         // Confirmation of uninstall
         $this->confirmUninstall = $this->l('Are you sure you want to remove Jirafe analytics integration for your site?');
