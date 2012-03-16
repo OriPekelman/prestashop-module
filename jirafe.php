@@ -174,14 +174,15 @@ class Jirafe extends Module
     public function getJirafeClient()
     {
         if (null === $this->jirafeClient) {
+            // Get client connection
+            $timeout = 10;
+            $port = 443;
+            $useragent = 'jirafe-ecommerce-phpclient/' . $this->version;
+            $base = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
+            $connection = new Jirafe_HttpConnection_Curl($base, $port, $timeout, $useragent);
+            // Get client
             $ps = $this->getPrestashopClient();
-            // Create Jirafe Client
-            if (JIRAFE_DEBUG) {
-                $connection = new Jirafe_HttpConnection_Curl('https://test-api.jirafe.com/v1',443);
-                $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
-            } else {
-                $this->jirafeClient = new Jirafe_Client($ps->get('token'));
-            }
+            $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
         }
 
         return $this->jirafeClient;
