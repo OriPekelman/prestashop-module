@@ -83,12 +83,11 @@ class Jirafe extends Module
 
     private function installAdminDashboard()
     {
-        @copy(_PS_MODULE_DIR_.$this->name.'/logo.gif', _PS_IMG_DIR_.'t/'.$tabClass.'.gif');
         $tab = new Tab();
-        $tab->name = array(1=>'Jirafe Analytics', 2=>'Mon onglet tutoriel');
+        $tab->name = 'Jirafe Analytics';
         $tab->class_name = 'AdminJirafeDashboard';
         $tab->module = 'jirafe';
-        $tab->id_parent = 0;
+        $tab->id_parent = Tab::getIdFromClassName('AdminParentStats');
         return $tab->add();
     }
 
