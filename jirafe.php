@@ -127,36 +127,6 @@ class Jirafe extends Module
         );
     }
 
-    //Display Configuration page of your module.
-    public function getContent()
-    {
-        global $currentIndex;
-
-        $ps = $this->getPrestashopClient();
-
-        $html = '<h2>'.$this->displayName.'</h2>';
-
-        if (Tools::isSubmit('submitJirafe')) {
-            $ps->set('site_id', (int)Tools::getValue('JIRAFE_SITE_ID'));
-            $html .= $this->displayConfirmation($this->l('Configuration updated'));
-        }
-
-        $conflink = $currentIndex.'&configure='.$this->name.'&token='.Tools::getValue('token');
-        $html .= '
-            <fieldset><legend>'.$this->l('Configuration').'</legend>
-                <form action="'.htmlentities($conflink).'" method="post">
-                    <label>'.$this->l('Site ID').'</label>
-                    <div class="margin-form">
-                        <input type="text" name="JIRAFE_SITE_ID" value="'.Tools::getValue('JIRAFE_SITE_ID', $ps->get('site_id')).'" />
-                    </div>
-                    <div class="clear">&nbsp;</div>
-                    <input type="submit" name="submitJirafe" value="'.$this->l('   Save   ').'" class="button" />
-                </form>
-            </fieldset>
-            <div class="clear">&nbsp;</div>';
-        return $html;
-    }
-
     public function getPrestashopClient()
     {
         if (null === $this->prestashopClient) {
