@@ -39,6 +39,37 @@ class Jirafe extends Module
         $this->confirmUninstall = $this->l('Are you sure you want to remove Jirafe analytics integration for your site?');
     }
 
+    public function getPrestashopClient()
+    {
+        if (null === $this->prestashopClient) {
+            // Prestashop Ecommerce Client
+            $this->prestashopClient = new Jirafe_Platform_Prestashop();
+
+            if (JIRAFE_DEBUG) {
+                $this->prestashopClient->trackerUrl = 'test-data.jirafe.com';
+            }
+        }
+
+        return $this->prestashopClient;
+    }
+
+    public function getJirafeClient()
+    {
+        if (null === $this->jirafeClient) {
+            // Get client connection
+            $timeout = 10;
+            $port = 443;
+            $useragent = 'jirafe-ecommerce-phpclient/' . $this->version;
+            $base = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
+            $connection = new Jirafe_HttpConnection_Curl($base, $port, $timeout, $useragent);
+            // Get client
+            $ps = $this->getPrestashopClient();
+            $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
+        }
+
+        return $this->jirafeClient;
+    }
+
     public function install()
     {
         $ps = $this->getPrestashopClient();
@@ -49,7 +80,12 @@ class Jirafe extends Module
 
         // Check if there is a token (probably not since we are installing) and if not, get one from Jirafe
         if (empty($app['token'])) {
-            $app = $jf->applications()->create($app['name'], $app['url']);
+            try {
+                $app = $jf->applications()->create($app['name'], $app['url']);
+            } catch (Jirafe_Exception $e) {
+                $this->_errors[] = $this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.');
+                return false;
+            }
 
             // Set the application information in Prestashop
             $ps->setApplication($app);
@@ -58,7 +94,12 @@ class Jirafe extends Module
         }
 
         // Sync for the first time
-        $results = $jf->applications($app['app_id'])->resources()->sync($ps->getSites(), $ps->getUsers());
+        try {
+            $results = $jf->applications($app['app_id'])->resources()->sync($ps->getSites(), $ps->getUsers());
+        } catch (Jirafe_Exception $e) {
+            $this->_errors[] = $this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.');
+            return false;
+        }
 
         // Save information back in Prestashop
         $ps->setUsers($results['users']);
@@ -125,37 +166,6 @@ class Jirafe extends Module
             parent::uninstall()
             && $tab->delete()
         );
-    }
-
-    public function getPrestashopClient()
-    {
-        if (null === $this->prestashopClient) {
-            // Prestashop Ecommerce Client
-            $this->prestashopClient = new Jirafe_Platform_Prestashop();
-
-            if (JIRAFE_DEBUG) {
-                $this->prestashopClient->trackerUrl = 'test-data.jirafe.com';
-            }
-        }
-
-        return $this->prestashopClient;
-    }
-
-    public function getJirafeClient()
-    {
-        if (null === $this->jirafeClient) {
-            // Get client connection
-            $timeout = 10;
-            $port = 443;
-            $useragent = 'jirafe-ecommerce-phpclient/' . $this->version;
-            $base = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
-            $connection = new Jirafe_HttpConnection_Curl($base, $port, $timeout, $useragent);
-            // Get client
-            $ps = $this->getPrestashopClient();
-            $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
-        }
-
-        return $this->jirafeClient;
     }
 
     /**
@@ -308,10 +318,17 @@ class Jirafe extends Module
 
         // Sync the changes
         $app = $ps->getApplication();
-        $results = $jf->applications($ps->get('app_id'))->resources()->sync($ps->getSites(), $ps->getUsers());
+        try {
+            $results = $jf->applications($ps->get('app_id'))->resources()->sync($ps->getSites(), $ps->getUsers());
+        } catch (Jirafe_Exception $e) {
+            $this->_errors[] = $this->displayError($this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.'));
+            return false;
+        }
 
         // Save information back in Prestashop
         $ps->setUsers($results['users']);
         $ps->setSites($results['sites']);
+
+        return true;
     }
 }
