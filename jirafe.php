@@ -46,7 +46,7 @@ class Jirafe extends Module
     {
         if (null === $this->prestashopClient) {
             // Prestashop Ecommerce Client
-            $this->prestashopClient = new Jirafe_Platform_Prestashop();
+            $this->prestashopClient = new Jirafe_Platform_Prestashop15();
 
             if (JIRAFE_DEBUG) {
                 $this->prestashopClient->trackerUrl = 'test-data.jirafe.com';
