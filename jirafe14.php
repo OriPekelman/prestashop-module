@@ -81,7 +81,7 @@ class Jirafe extends Module
         // Check if there is a token (probably not since we are installing) and if not, get one from Jirafe
         if (empty($app['token'])) {
             try {
-                $app = $jf->applications()->create($app['name'], $app['url']);
+                $app = $jf->applications()->create($app['name'], $app['url'], 'prestashop', _PS_VERSION_, JIRAFE_MODULE_VERSION);
             } catch (Jirafe_Exception $e) {
                 // TODO: display error msg
                 /* $this->_errors[] = $this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.'); */
