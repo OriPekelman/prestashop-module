@@ -91,7 +91,12 @@ class Jirafe extends Module
 
         // Sync for the first time
         try {
-            $results = $jf->applications($app['app_id'])->resources()->sync($ps->getSites(), $ps->getUsers());
+            $results = $jf->applications($app['app_id'])->resources()->sync($ps->getSites(), $ps->getUsers(), array(
+                'platform_type' => 'prestashop',
+                'platform_version' => _PS_VERSION_,
+                'plugin_version' => JIRAFE_MODULE_VERSION,
+                'opt_in' => false // @TODO, enable onboarding when ready
+            ));
         } catch (Jirafe_Exception $e) {
             $this->_errors[] = $this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.');
             return false;
@@ -315,7 +320,12 @@ class Jirafe extends Module
         // Sync the changes
         $app = $ps->getApplication();
         try {
-            $results = $jf->applications($ps->get('app_id'))->resources()->sync($ps->getSites(), $ps->getUsers());
+            $results = $jf->applications($ps->get('app_id'))->resources()->sync($ps->getSites(), $ps->getUsers(), array(
+                'platform_type' => 'prestashop',
+                'platform_version' => _PS_VERSION_,
+                'plugin_version' => JIRAFE_MODULE_VERSION,
+                'opt_in' => false // @TODO, enable onboarding when ready
+            ));
         } catch (Jirafe_Exception $e) {
             $this->_errors[] = $this->displayError($this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.'));
             return false;
