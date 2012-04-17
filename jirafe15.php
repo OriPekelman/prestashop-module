@@ -78,7 +78,7 @@ class Jirafe extends Module
         if (empty($app['token'])) {
             try {
                 $app = $jf->applications()->create($app['name'], $app['url'], 'prestashop', _PS_VERSION_, JIRAFE_MODULE_VERSION);
-            } catch (Jirafe_Exception $e) {
+            } catch (Exception $e) {
                 $this->_errors[] = $this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.');
                 return false;
             }
@@ -97,7 +97,7 @@ class Jirafe extends Module
                 'plugin_version' => JIRAFE_MODULE_VERSION,
                 'opt_in' => false // @TODO, enable onboarding when ready
             ));
-        } catch (Jirafe_Exception $e) {
+        } catch (Exception $e) {
             $this->_errors[] = $this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.');
             return false;
         }
@@ -326,7 +326,7 @@ class Jirafe extends Module
                 'plugin_version' => JIRAFE_MODULE_VERSION,
                 'opt_in' => false // @TODO, enable onboarding when ready
             ));
-        } catch (Jirafe_Exception $e) {
+        } catch (Exception $e) {
             $this->_errors[] = $this->displayError($this->l('The Jirafe Web Service is unreachable. Please try again when the connection is restored.'));
             return false;
         }
