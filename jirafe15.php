@@ -1,9 +1,7 @@
 <?php
 
-class Jirafe extends Module
+class Jirafe extends Jirafe_Base
 {
-    // The Jirafe Client communicates with the Jirafe web service
-    private $jirafeClient;
     // The Prestashop Client communicates with the Prestashop ecommerce platform
     private $prestashopClient;
 
@@ -41,29 +39,10 @@ class Jirafe extends Module
             // Prestashop Ecommerce Client
             $this->prestashopClient = new Jirafe_Platform_Prestashop15();
 
-            if (JIRAFE_DEBUG) {
-                $this->prestashopClient->trackerUrl = 'test-data.jirafe.com';
-            }
+            $this->prestashopClient->trackerUrl = JIRAFE_TRACKER_URL;
         }
 
         return $this->prestashopClient;
-    }
-
-    public function getJirafeClient()
-    {
-        if (null === $this->jirafeClient) {
-            // Get client connection
-            $timeout = 10;
-            $port = 443;
-            $useragent = 'jirafe-ecommerce-phpclient/' . $this->version;
-            $base = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
-            $connection = new Jirafe_HttpConnection_Curl($base, $port, $timeout, $useragent);
-            // Get client
-            $ps = $this->getPrestashopClient();
-            $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
-        }
-
-        return $this->jirafeClient;
     }
 
     public function install()
@@ -253,9 +232,12 @@ class Jirafe extends Module
 
     public function hookBackOfficeHeader($params)
     {
-        return '
-            <link type="text/css" rel="stylesheet" href="https://jirafe.com/dashboard/css/prestashop_ui.css" media="all" />
-            <script type="text/javascript" src="https://jirafe.com/dashboard/js/prestashop_ui.js"></script>';
+        $prefix = JIRAFE_ASSETS_URL_PREFIX;
+
+        return <<<EOT
+            <link type="text/css" rel="stylesheet" href="{$prefix}/css/prestashop_ui.css" media="all" />
+            <script type="text/javascript" src="{$prefix}/js/prestashop_ui.js"></script>
+EOT;
     }
 
     /**
