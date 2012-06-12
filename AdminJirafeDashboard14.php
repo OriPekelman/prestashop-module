@@ -14,7 +14,7 @@ class AdminJirafeDashboard extends AdminTab
         $jirafe = new Jirafe();
         $ps = $jirafe->getPrestashopClient();
 
-        $apiUrl = (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1';
+        $apiUrl = JIRAFE_API_URL;
         $token = $ps->get('token');
         $appId = $ps->get('app_id');
         $locale = $ps->getLanguage();
