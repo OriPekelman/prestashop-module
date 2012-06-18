@@ -10,10 +10,10 @@ First of all, clone project:
 
     git clone git@github.com:jirafe/prestashop-module.git
 
-Then, init/update all project submodules:
+Then, init/update project submodule:
 
     cd (path_to_jirafe_module)
-    git submodule update --init --recursive
+    git submodule update --init
 
 Link this directory to your prestashop ecommerce platform root directory
 
