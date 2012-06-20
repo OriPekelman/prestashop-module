@@ -141,53 +141,24 @@ class Jirafe extends Jirafe_Base
     {
         $object = $params['object'];
 
-        if ($object instanceof Employee || $object instanceof Shop) {
+        if ($object instanceof Employee
+            || $object instanceof Shop
+            || $object instanceof ShopUrl) {
             $this->_sync();
         }
     }
 
     public function hookActionObjectUpdateBefore($params)
     {
-        // do not sync all updated object by default,
-        // only if certain fields are updated
-        self::$syncUpdatedObject = false;
-
-        $object = $params['object'];
-
-        // sync only if following fields are changed
-        if ($object instanceof Employee) {
-            $employee = new Employee();
-            $oldObject = $employee->getByEmail($object->email);
-            if ($oldObject) {
-                if ($object->lastname != $oldObject->lastname ||
-                $object->firstname != $oldObject->firstname ||
-                $object->email != $oldObject->email ||
-                $object->active != $oldObject->active) {
-                    self::$syncUpdatedObject = true;
-                }
-            } else {
-                // sync if email change
-                self::$syncUpdatedObject = true;
-            }
-        }
-        elseif ($object instanceof Shop) {
-            $oldShop = Shop::getShop($object->id);
-            if ($object->name != $oldShop['name'] || $object->active != $oldShop['active']) {
-                self::$syncUpdatedObject = true;
-            }
-        }
+        // active a flag if an object is changed before prestashop really saves
+        // the object
+        self::$syncUpdatedObject = $this->getPrestashopClient()->isDataChanged($params);
     }
 
-    /**
-     * Check to see if someone updated something we need to update Jirafe about
-     */
     public function hookActionObjectUpdateAfter($params)
     {
-        // wtf? this hook is executed for each request of jirafe module page
-
-        $object = $params['object'];
-
-        if (($object instanceof Employee || $object instanceof Shop) && self::$syncUpdatedObject) {
+        // sync if an object was detected as changed
+        if (self::$syncUpdatedObject) {
             $this->_sync();
         }
     }
@@ -199,7 +170,9 @@ class Jirafe extends Jirafe_Base
     {
         $object = $params['object'];
 
-        if ($object instanceof Employee || $object instanceof Shop) {
+        if ($object instanceof Employee
+            || $object instanceof Shop
+            || $object instanceof ShopUrl) {
             $this->_sync();
         }
     }
