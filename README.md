@@ -8,7 +8,7 @@ Note that this project uses the Jirafe PHP Client as a submodule, so you cannot 
 
 First of all, clone project:
 
-    git clone git@github.com:jirafe/prestashop-module.git
+    git clone git://github.com/jirafe/prestashop-module.git
 
 Then, init/update project submodule:
 
