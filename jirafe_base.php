@@ -2,8 +2,9 @@
 
 class Jirafe_Base extends Module
 {
-    // The Jirafe Client communicates with the Jirafe web service
-    private $jirafeClient;
+    // The Jirafe Client communicates with the Jirafe admin web service
+    private $jirafeAdminClient;
+    private $jirafeTrackerClient;
 
     public function __construct()
     {
@@ -34,18 +35,28 @@ class Jirafe_Base extends Module
         $this->confirmUninstall = $this->l('Are you sure you want to remove Jirafe analytics integration for your site?');
     }
 
-    public function getJirafeClient()
+    public function getJirafeAdminClient()
     {
-        if (null === $this->jirafeClient) {
+        if (null === $this->jirafeAdminClient) {
             // Get client connection
             $timeout = 10;
             $useragent = 'jirafe-ecommerce-phpclient/' . $this->version;
             $connection = new Jirafe_HttpConnection_Curl(JIRAFE_API_URL, JIRAFE_API_PORT, $timeout, $useragent);
             // Get client
             $ps = $this->getPrestashopClient();
-            $this->jirafeClient = new Jirafe_Client($ps->get('token'), $connection);
+            $this->jirafeAdminClient = new Jirafe_Admin_Client($ps->get('token'), $connection);
         }
 
-        return $this->jirafeClient;
+        return $this->jirafeAdminClient;
+    }
+
+    public function getJirafeTrackerClient()
+    {
+        if (null === $this->jirafeTrackerClient) {
+            $ps = $this->getPrestashopClient();
+            $this->jirafeTrackerClient = new Jirafe_Tracker_Client(JIRAFE_TRACKER_URL, $ps->get('token'));
+        }
+
+        return $this->jirafeTrackerClient;
     }
 }

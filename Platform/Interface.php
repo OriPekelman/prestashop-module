@@ -62,9 +62,6 @@ interface Jirafe_Platform_Interface
 
     public function getCart();
 
-    public function logCartUpdate($cart);
-
-
     /**
      * Set Jirafe specific information from a list of sites
      *

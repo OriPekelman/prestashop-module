@@ -22,7 +22,7 @@ class Jirafe extends Jirafe_Base
     public function install()
     {
         $ps = $this->getPrestashopClient();
-        $jf = $this->getjirafeClient();
+        $jf = $this->getJirafeAdminClient();
 
         // Get the application information needed by Jirafe
         $app = $ps->getApplication();
@@ -244,7 +244,7 @@ EOT;
     private function _sync()
     {
         $ps = $this->getPrestashopClient();
-        $jf = $this->getJirafeClient();
+        $jf = $this->getJirafeAdminClient();
 
         // Sync the changes
         $app = $ps->getApplication();

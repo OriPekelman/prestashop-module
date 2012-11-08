@@ -21,7 +21,7 @@ class Jirafe extends Jirafe_Base
     public function install()
     {
         $ps = $this->getPrestashopClient();
-        $jf = $this->getjirafeClient();
+        $jf = $this->getJirafeAdminClient();
 
         // Get the application information needed by Jirafe
         $app = $ps->getApplication();
@@ -122,7 +122,7 @@ class Jirafe extends Jirafe_Base
     public function hookBackOfficeTop($params)
     {
        $ps = $this->getPrestashopClient();
-       $jf = $this->getJirafeClient();
+       $jf = $this->getJirafeAdminClient();
 
         // Back Office Top hook is called twice - once before saving, and once after. So, when we initially come here, we have not saved yet.
         // We just set a flag. The second time we come here, we have already saved, and so we check the flag and sync.
@@ -186,17 +186,16 @@ EOT;
      */
     public function hookCart($params)
     {
-        // Get the ecommerce client
         $ps = $this->getPrestashopClient();
+        $tc = $this->getJirafeTrackerClient();
+        $su = new Jirafe_SessionUtils();
 
-        // First get the details of the cart to log to the server
+        $siteId = $ps->getCurrentSiteId();
+        $visitorId = $su->getVisitorId($siteId);
+
         $cart = $ps->getCart($params);
 
-        // Then get the details of the visitor
-        //$visitor = $ps->getVisitor($params);
-
-        // Log the cart update for this visitor
-        $ps->logCartUpdate($cart);
+        $tc->updateCart($siteId, $visitorId, $cart);
     }
 
     /**
@@ -207,16 +206,15 @@ EOT;
      */
     public function hookOrderConfirmation($params)
     {
-        // Get the ecommerce client
         $ps = $this->getPrestashopClient();
+        $tc = $this->getJirafeTrackerClient();
+        $su = new Jirafe_SessionUtils();
 
-        // First get the details of the order to log to the server
+        $siteId = $ps->getCurrentSiteId();
+        $visitorId = $su->getVisitorId($siteId);
+
         $order = $ps->getOrder($params);
 
-        // Then get the details of the visitor
-        //$visitor = $ps->getVisitor($params);
-
-        // Log the order for this visitor
-        $ps->logOrder($order);
+        $tc->createOrder($siteId, $visitorId, $order);
     }
 }

@@ -33,28 +33,6 @@ abstract class Jirafe_Platform_Ecommerce implements Jirafe_Platform_Interface
 
     // URLs for the Jirafe web service
     public $scriptUrl = 'c.jirafe.com';
-    public $trackerUrl = 'data.jirafe.com';
-
-    private $tracker = null;
-
-    /**
-     * The tracker is the interface Piwik uses to communicate to its service
-     * @param int $siteId The ID of the site where the tracker will be used
-     */
-    protected function _getTracker ($siteId)
-    {
-        if (null === $this->tracker) {
-            $trackerUrl = 'http://' .$this->trackerUrl.'/';
-            $this->tracker = new Jirafe_PiwikTracker($siteId, $trackerUrl);
-
-            $token = $this->get('token');
-            $this->tracker->setTokenAuth($token);
-            $this->tracker->setVisitorId($this->tracker->getVisitorId());
-            $this->tracker->disableCookieSupport();
-        }
-
-        return $this->tracker;
-    }
 
     public function getTag()
     {
