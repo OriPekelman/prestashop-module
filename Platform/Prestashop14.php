@@ -369,24 +369,24 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
 
         if (!empty($params['objOrder'])) {
             $order = $params['objOrder'];
-            $psproducts = $order->getProducts();
+            $psProducts = $order->getProducts();
             $jfproducts = array();
-            if (!empty($psproducts)) {
-                foreach ($psproducts as $psproduct) {
-                    $sku = $psproduct['product_id'];
-                    if (!empty($psproduct['product_reference'])) {
-                        $sku = $psproduct['product_reference'];
+            if (!empty($psProducts)) {
+                foreach ($psProducts as $psProduct) {
+                    $sku = $psProduct['product_id'];
+                    if (!empty($psProduct['product_reference'])) {
+                        $sku = $psProduct['product_reference'];
                     }
-                    if (!empty($psproduct['product_upc'])) {
-                        $sku = $psproduct['product_upc'];
+                    if (!empty($psProduct['product_upc'])) {
+                        $sku = $psProduct['product_upc'];
                     }
                     $jfproducts[] = array(
-                        'unique_id' => $psproduct['product_id'],
+                        'unique_id' => $psProduct['product_id'],
                         'sku' => $sku,  // sku cannot be null - so set it to the product id if it is empty
-                        'name' => $psproduct['product_name'],
-                        'qty' => $psproduct['product_quantity'],
-                        'price' => $psproduct['product_price'],
-                        //'categories' => array($psproduct['category'])  // A product can belong to only 1 category
+                        'name' => $psProduct['product_name'],
+                        'qty' => $psProduct['product_quantity'],
+                        'price' => $psProduct['product_price'],
+                        //'categories' => array($psProduct['category'])  // A product can belong to only 1 category
                     );
                 }
             }
@@ -401,39 +401,53 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
 
         return $jforder;
     }
+
+    /**
+     * Get a Jirafe cart state from prestashop cart
+     *
+     * @return Jirafe_Tracker_CartState cart
+     */
     public function getCart($params = null)
     {
-        $jfcart = array();
-
         if (!empty($params['cart'])) {
+            $su = new Jirafe_SessionUtils();
+
             $cart = $params['cart'];
-            $psproducts = $cart->getProducts();
-            $jfproducts = array();
+            $psProducts = $cart->getProducts();
+
+            $siteId = $this->getCurrentSiteId();
+            $visitorId = $su->getVisitorId($siteId);
+            $jfProducts = array();
             $total = 0;
-            if (!empty($psproducts)) {
-                foreach ($psproducts as $psproduct) {
-                    $sku = $psproduct['id_product'];
-                    if (!empty($psproduct['reference'])) {
-                        $sku = $psproduct['reference'];
+            if (!empty($psProducts)) {
+                foreach ($psProducts as $psProduct) {
+                    $sku = $psProduct['id_product'];
+                    if (!empty($psProduct['reference'])) {
+                        $sku = $psProduct['reference'];
                     }
-                    if (!empty($psproduct['upc'])) {
-                        $sku = $psproduct['upc'];
+                    if (!empty($psProduct['upc'])) {
+                        $sku = $psProduct['upc'];
                     }
-                    $jfproducts[] = array(
-                        'sku' => $sku,  // sku cannot be null - so set it to the product id if it is empty
-                        'name' => $psproduct['name'],
-                        'qty' => $psproduct['quantity'],
-                        'price' => $psproduct['price'],
-                        'categories' => array($psproduct['category'])  // A product can belong to only 1 category
+                    $jfProducts[] = new Jirafe_Tracker_CartStateEntry(
+                        $sku,
+                        $psProduct['name'],
+                        $psProduct['category'],
+                        $psProduct['price'],
+                        $psProduct['quantity']
                     );
-                    $total += $psproduct['total'];
+                    $total += $psProduct['total'];
                 }
             }
-            $jfcart['total'] = $total;
-            $jfcart['products'] = $jfproducts;
-        }
 
-        return $jfcart;
+            $jfCart = new Jirafe_Tracker_CartState(
+                $visitorId,
+                $siteId,
+                $total,
+                $jfProducts
+            );
+
+            return $jfCart;
+        }
     }
 
     /**

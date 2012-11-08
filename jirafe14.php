@@ -188,14 +188,9 @@ EOT;
     {
         $ps = $this->getPrestashopClient();
         $tc = $this->getJirafeTrackerClient();
-        $su = new Jirafe_SessionUtils();
-
-        $siteId = $ps->getCurrentSiteId();
-        $visitorId = $su->getVisitorId($siteId);
-
         $cart = $ps->getCart($params);
 
-        $tc->updateCart($siteId, $visitorId, $cart);
+        $tc->updateCart($cart);
     }
 
     /**
