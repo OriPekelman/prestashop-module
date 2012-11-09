@@ -365,7 +365,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
 
     public function getOrder($params = null)
     {
-        $jforder = array();
+        $jfOrder = array();
 
         if (!empty($params['objOrder'])) {
             $order = $params['objOrder'];
@@ -381,25 +381,28 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
                         $sku = $psProduct['product_upc'];
                     }
                     $jfProducts[] = array(
-                        'unique_id' => $psProduct['product_id'],
-                        'sku' => $sku,  // sku cannot be null - so set it to the product id if it is empty
-                        'name' => $psProduct['product_name'],
-                        'qty' => $psProduct['product_quantity'],
-                        'price' => $psProduct['product_price'],
-                        //'categories' => array($psProduct['category'])  // A product can belong to only 1 category
+                        'productCode' => $sku,  // sku cannot be null - so set it to the product id if it is empty
+                        'productName' => $psProduct['product_name'],
+                        'quantity' => $psProduct['product_quantity'],
+                        'unitPrice' => $psProduct['product_price'],
+                        'categoryName' => null // don't have category here
                     );
                 }
             }
-            $jforder['subtotal'] = $order->total_products; // 1504.18
-            $jforder['shipping'] = $order->total_shipping; // 7.00
-            $jforder['discount'] = $order->total_discounts; // 0.00
-            $jforder['tax'] = ($order->total_products_wt - $order->total_products) + $order->carrier_tax_rate;
-            $jforder['total'] = $order->total_paid; // 1571.35
-            $jforder['orderid'] = $order->id;
-            $jforder['products'] = $jfProducts;
+            $jfOrder['subTotal'] = $order->total_products; // 1504.18
+            $jfOrder['shippingAmount'] = $order->total_shipping; // 7.00
+            $jfOrder['discountAmount'] = $order->total_discounts; // 0.00
+            $jfOrder['taxAmount'] = ($order->total_products_wt - $order->total_products) + $order->carrier_tax_rate;
+            $jfOrder['grandTotal'] = $order->total_paid; // 1571.35
+            $jfOrder['orderId'] = $order->id;
+            $jfOrder['entries'] = $jfProducts;
+            $siteId = $this->getCurrentSiteId();
+            $su = new Jirafe_SessionUtils();
+            $jfOrder['siteId'] = $siteId;
+            $jfOrder['visitorId'] = $su->getVisitorId($siteId);
         }
 
-        return $jforder;
+        return $jfOrder;
     }
 
     /**

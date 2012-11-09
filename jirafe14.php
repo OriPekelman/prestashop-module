@@ -208,15 +208,11 @@ EOT;
     {
         $ps = $this->getPrestashopClient();
         $tc = $this->getJirafeTrackerClient();
-        $su = new Jirafe_SessionUtils();
-
-        $siteId = $ps->getCurrentSiteId();
-        $visitorId = $su->getVisitorId($siteId);
 
         $order = $ps->getOrder($params);
 
         try {
-            $tc->createOrder($siteId, $visitorId, $order);
+            $tc->createOrder($order);
         } catch (Jirafe_Exception $e) {
             // do nothing for now
         }
