@@ -370,7 +370,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
         if (!empty($params['objOrder'])) {
             $order = $params['objOrder'];
             $psProducts = $order->getProducts();
-            $jfproducts = array();
+            $jfProducts = array();
             if (!empty($psProducts)) {
                 foreach ($psProducts as $psProduct) {
                     $sku = $psProduct['product_id'];
@@ -380,7 +380,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
                     if (!empty($psProduct['product_upc'])) {
                         $sku = $psProduct['product_upc'];
                     }
-                    $jfproducts[] = array(
+                    $jfProducts[] = array(
                         'unique_id' => $psProduct['product_id'],
                         'sku' => $sku,  // sku cannot be null - so set it to the product id if it is empty
                         'name' => $psProduct['product_name'],
@@ -396,7 +396,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
             $jforder['tax'] = ($order->total_products_wt - $order->total_products) + $order->carrier_tax_rate;
             $jforder['total'] = $order->total_paid; // 1571.35
             $jforder['orderid'] = $order->id;
-            $jforder['products'] = $jfproducts;
+            $jforder['products'] = $jfProducts;
         }
 
         return $jforder;
@@ -405,41 +405,45 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
     /**
      * Get a Jirafe cart state from prestashop cart
      *
-     * @return Jirafe_TrackerApi_CartState cart
+     * @return array jirafe cart state
      */
     public function getCart($params = null)
     {
-        $jfcart = array();
+        $jfCart = array();
 
         if (!empty($params['cart'])) {
             $cart = $params['cart'];
-            $psproducts = $cart->getProducts();
-            $jfproducts = array();
+            $psProducts = $cart->getProducts();
+            $jfProducts = array();
             $total = 0;
-            if (!empty($psproducts)) {
-                foreach ($psproducts as $psproduct) {
-                    $sku = $psproduct['id_product'];
-                    if (!empty($psproduct['reference'])) {
-                        $sku = $psproduct['reference'];
+            if (!empty($psProducts)) {
+                foreach ($psProducts as $psProduct) {
+                    $sku = $psProduct['id_product'];
+                    if (!empty($psProduct['reference'])) {
+                        $sku = $psProduct['reference'];
                     }
-                    if (!empty($psproduct['upc'])) {
-                        $sku = $psproduct['upc'];
+                    if (!empty($psProduct['upc'])) {
+                        $sku = $psProduct['upc'];
                     }
-                    $jfproducts[] = array(
-                        'sku' => $sku,  // sku cannot be null - so set it to the product id if it is empty
-                        'name' => $psproduct['name'],
-                        'qty' => $psproduct['quantity'],
-                        'price' => $psproduct['price'],
-                        'categories' => array($psproduct['category'])  // A product can belong to only 1 category
+                    $jfProducts[] = array(
+                        'productCode' => $sku,  // sku cannot be null - so set it to the product id if it is empty
+                        'productName' => $psProduct['name'],
+                        'quantity' => $psProduct['quantity'],
+                        'unitPrice' => $psProduct['price'],
+                        'categoryName' => $psProduct['category']  // A product can belong to only 1 category
                     );
-                    $total += $psproduct['total'];
+                    $total += $psProduct['total'];
                 }
             }
-            $jfcart['total'] = $total;
-            $jfcart['products'] = $jfproducts;
+            $jfCart['totalPrice'] = $total;
+            $jfCart['entries'] = $jfProducts;
+            $siteId = $this->getCurrentSiteId();
+            $su = new Jirafe_SessionUtils();
+            $jfCart['siteId'] = $siteId;
+            $jfCart['visitorId'] = $su->getVisitorId($siteId);
         }
 
-        return $jfcart;
+        return $jfCart;
     }
 
     /**
