@@ -405,7 +405,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
     /**
      * Get a Jirafe cart state from prestashop cart
      *
-     * @return Jirafe_Tracker_CartState cart
+     * @return Jirafe_TrackerApi_CartState cart
      */
     public function getCart($params = null)
     {
@@ -428,7 +428,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
                     if (!empty($psProduct['upc'])) {
                         $sku = $psProduct['upc'];
                     }
-                    $jfProducts[] = new Jirafe_Tracker_CartStateEntry(
+                    $jfProducts[] = new Jirafe_TrackerApi_CartStateEntry(
                         $sku,
                         $psProduct['name'],
                         $psProduct['category'],
@@ -439,7 +439,7 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
                 }
             }
 
-            $jfCart = new Jirafe_Tracker_CartState(
+            $jfCart = new Jirafe_TrackerApi_CartState(
                 $visitorId,
                 $siteId,
                 $total,

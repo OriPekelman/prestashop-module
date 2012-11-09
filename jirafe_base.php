@@ -44,7 +44,7 @@ class Jirafe_Base extends Module
             $connection = new Jirafe_HttpConnection_Curl(JIRAFE_API_URL, JIRAFE_API_PORT, $timeout, $useragent);
             // Get client
             $ps = $this->getPrestashopClient();
-            $this->jirafeAdminClient = new Jirafe_Admin_Client($ps->get('token'), $connection);
+            $this->jirafeAdminClient = new Jirafe_AdminApi_Client($ps->get('token'), $connection);
         }
 
         return $this->jirafeAdminClient;
@@ -54,7 +54,7 @@ class Jirafe_Base extends Module
     {
         if (null === $this->jirafeTrackerClient) {
             $ps = $this->getPrestashopClient();
-            $this->jirafeTrackerClient = new Jirafe_Tracker_Client(JIRAFE_TRACKER_URL, $ps->get('token'));
+            $this->jirafeTrackerClient = new Jirafe_TrackerApi_Client(JIRAFE_TRACKER_URL, $ps->get('token'));
         }
 
         return $this->jirafeTrackerClient;
