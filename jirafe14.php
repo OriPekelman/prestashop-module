@@ -191,7 +191,11 @@ EOT;
 
         $cart = $ps->getCart($params);
 
-        $tc->updateCart($cart);
+        try {
+            $tc->updateCart($cart);
+        } catch (Jirafe_Exception $e) {
+            // do nothing for now
+        }
     }
 
     /**
@@ -211,6 +215,10 @@ EOT;
 
         $order = $ps->getOrder($params);
 
-        $tc->createOrder($siteId, $visitorId, $order);
+        try {
+            $tc->createOrder($siteId, $visitorId, $order);
+        } catch (Jirafe_Exception $e) {
+            // do nothing for now
+        }
     }
 }
