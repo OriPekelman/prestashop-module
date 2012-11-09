@@ -409,45 +409,37 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
      */
     public function getCart($params = null)
     {
+        $jfcart = array();
+
         if (!empty($params['cart'])) {
-            $su = new Jirafe_SessionUtils();
-
             $cart = $params['cart'];
-            $psProducts = $cart->getProducts();
-
-            $siteId = $this->getCurrentSiteId();
-            $visitorId = $su->getVisitorId($siteId);
-            $jfProducts = array();
+            $psproducts = $cart->getProducts();
+            $jfproducts = array();
             $total = 0;
-            if (!empty($psProducts)) {
-                foreach ($psProducts as $psProduct) {
-                    $sku = $psProduct['id_product'];
-                    if (!empty($psProduct['reference'])) {
-                        $sku = $psProduct['reference'];
+            if (!empty($psproducts)) {
+                foreach ($psproducts as $psproduct) {
+                    $sku = $psproduct['id_product'];
+                    if (!empty($psproduct['reference'])) {
+                        $sku = $psproduct['reference'];
                     }
-                    if (!empty($psProduct['upc'])) {
-                        $sku = $psProduct['upc'];
+                    if (!empty($psproduct['upc'])) {
+                        $sku = $psproduct['upc'];
                     }
-                    $jfProducts[] = new Jirafe_TrackerApi_CartStateEntry(
-                        $sku,
-                        $psProduct['name'],
-                        $psProduct['category'],
-                        $psProduct['price'],
-                        $psProduct['quantity']
+                    $jfproducts[] = array(
+                        'sku' => $sku,  // sku cannot be null - so set it to the product id if it is empty
+                        'name' => $psproduct['name'],
+                        'qty' => $psproduct['quantity'],
+                        'price' => $psproduct['price'],
+                        'categories' => array($psproduct['category'])  // A product can belong to only 1 category
                     );
-                    $total += $psProduct['total'];
+                    $total += $psproduct['total'];
                 }
             }
-
-            $jfCart = new Jirafe_TrackerApi_CartState(
-                $visitorId,
-                $siteId,
-                $total,
-                $jfProducts
-            );
-
-            return $jfCart;
+            $jfcart['total'] = $total;
+            $jfcart['products'] = $jfproducts;
         }
+
+        return $jfcart;
     }
 
     /**
