@@ -193,7 +193,7 @@ EOT;
 
         try {
             $tc->updateCart($cart);
-        } catch (Jirafe_Exception $e) {
+        } catch (Exception $e) {
             // do nothing for now
         }
     }
@@ -213,7 +213,7 @@ EOT;
 
         try {
             $tc->createOrder($order);
-        } catch (Jirafe_Exception $e) {
+        } catch (Exception $e) {
             // do nothing for now
         }
     }
