@@ -9,8 +9,7 @@ class Jirafe_Base extends Module
     public function __construct()
     {
         // Require/Autoload the other files
-        require_once _PS_MODULE_DIR_ . 'jirafe/vendor/jirafe-php-client-src/Jirafe/Autoloader.php';
-        Jirafe_Autoloader::register();
+        require_once _PS_MODULE_DIR_ . 'jirafe/vendor/jirafe-php-client/autoload.php';
 
         // for prestashop 1.4
         if (function_exists('__autoload')) spl_autoload_register('__autoload');
