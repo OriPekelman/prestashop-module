@@ -7,7 +7,7 @@ if (!defined('_PS_VERSION_') || !defined('_CAN_LOAD_FILES_'))
 define('JIRAFE_DEBUG', false);
 
 // plugin version
-define('JIRAFE_MODULE_VERSION', '0.1');
+define('JIRAFE_MODULE_VERSION', '0.2.0');
 
 // Urls configuration
 define('JIRAFE_API_URL', (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1');
