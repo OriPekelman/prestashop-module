@@ -206,7 +206,9 @@ class Jirafe_Platform_Prestashop14 extends Jirafe_Platform_Ecommerce
      */
     public function setSites($sites)
     {
-        $jsites = array();
+
+        // simply overwrite stored sites, will avoid losing when disabled and re-enabled again
+        $jsites = unserialize(base64_decode($this->get('sites')));
 
         foreach ($sites as $site) {
 

@@ -4,16 +4,16 @@ if (!defined('_PS_VERSION_') || !defined('_CAN_LOAD_FILES_'))
     exit;
 
 // Set to true if you want to debug the Jirafe API in the test sandbox
-define('JIRAFE_DEBUG', false);
+define('JIRAFE_DEBUG', true);
 
 // plugin version
-define('JIRAFE_MODULE_VERSION', '0.1');
+define('JIRAFE_MODULE_VERSION', '0.2.0');
 
 // Urls configuration
-define('JIRAFE_API_URL', (JIRAFE_DEBUG) ? 'https://test-api.jirafe.com/v1' : 'https://api.jirafe.com/v1');
-define('JIRAFE_API_PORT', 443);
-define('JIRAFE_TRACKER_URL', (JIRAFE_DEBUG) ? 'http://test-data.jirafe.com' : 'http://data.jirafe.com');
-define('JIRAFE_ASSETS_URL_PREFIX', 'https://jirafe.com/dashboard'); // without trailing slash
+define('JIRAFE_API_URL', (JIRAFE_DEBUG) ? 'http://api.jirafe.com/v1' : 'https://api.jirafe.com/v1');
+define('JIRAFE_API_PORT', 80);
+define('JIRAFE_TRACKER_URL', (JIRAFE_DEBUG) ? 'http://data.jirafe.com' : 'http://data.jirafe.com');
+define('JIRAFE_ASSETS_URL_PREFIX', 'http://jirafe.com/dashboard'); // without trailing slash
 
 require_once 'Platform/Interface.php';
 require_once 'Platform/Ecommerce.php';
