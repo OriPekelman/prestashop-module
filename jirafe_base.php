@@ -58,4 +58,44 @@ class Jirafe_Base extends Module
 
         return $this->jirafeTrackerClient;
     }
+
+    /**
+     * Hook which gets called when a user adds something to their cart.
+     * We then send Jirafe the updated cart information
+     *
+     * @param array $params variables from the front end
+     */
+    public function hookCart($params)
+    {
+        $ps = $this->getPrestashopClient();
+        $tc = $this->getJirafeTrackerClient();
+
+        $cart = $ps->getCart($params);
+
+        try {
+            $tc->updateCart($cart);
+        } catch (Exception $e) {
+            // do nothing for now
+        }
+    }
+
+    /**
+     * Hook which gets called when a user makes a new order
+     * We then send Jirafe the order information
+     *
+     * @param array $params variables from the front end
+     */
+    public function hookOrderConfirmation($params)
+    {
+        $ps = $this->getPrestashopClient();
+        $tc = $this->getJirafeTrackerClient();
+
+        $order = $ps->getOrder($params);
+
+        try {
+            $tc->createOrder($order);
+        } catch (Exception $e) {
+            // do nothing for now
+        }
+    }
 }
