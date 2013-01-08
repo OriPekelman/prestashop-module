@@ -22,7 +22,7 @@ class Jirafe extends Jirafe_Base
     public function install()
     {
         $ps = $this->getPrestashopClient();
-        $jf = $this->getjirafeClient();
+        $jf = $this->getJirafeAdminClient();
 
         // Get the application information needed by Jirafe
         $app = $ps->getApplication();
@@ -199,52 +199,10 @@ EOT;
         return $ps->getTag();
     }
 
-    /**
-     * Hook which gets called when a user adds something to their cart.
-     * We then send Jirafe the updated cart information
-     *
-     * @param array $params variables from the front end
-     */
-    public function hookCart($params)
-    {
-        // Get the ecommerce client
-        $ps = $this->getPrestashopClient();
-
-        // First get the details of the cart to log to the server
-        $cart = $ps->getCart($params);
-
-        // Then get the details of the visitor
-        //$visitor = $ps->getVisitor($params);
-
-        // Log the cart update for this visitor
-        $ps->logCartUpdate($cart);
-    }
-
-    /**
-     * Hook which gets called when a user makes a new order
-     * We then send Jirafe the order information
-     *
-     * @param array $params variables from the front end
-     */
-    public function hookOrderConfirmation($params)
-    {
-        // Get the ecommerce client
-        $ps = $this->getPrestashopClient();
-
-        // First get the details of the order to log to the server
-        $order = $ps->getOrder($params);
-
-        // Then get the details of the visitor
-        //$visitor = $ps->getVisitor($params);
-
-        // Log the order for this visitor
-        $ps->logOrder($order);
-    }
-
     private function _sync()
     {
         $ps = $this->getPrestashopClient();
-        $jf = $this->getJirafeClient();
+        $jf = $this->getJirafeAdminClient();
 
         // Sync the changes
         $app = $ps->getApplication();
