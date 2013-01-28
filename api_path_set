@@ -1,0 +1,38 @@
+#!/usr/bin/env php
+<?php
+
+# usage:
+#   php api_path_set dev_api_client/src                 - to use dev specific version of api client
+#   php api_path_set dev_api_client/src --update        - will update local api client source to dev source
+#   php api_path_set                                    - without any argument, will reset to local source of api client
+
+
+define('LOADER_REGEX', "#require_once\s(_PS_MODULE_DIR_\s?\.\s?)?'([^']+)'#smi");
+
+$dat = file_get_contents(__DIR__ . '/jirafe_base.php');
+if (isset($argv[1])) {
+    $dat = file_get_contents(__DIR__ . '/jirafe_base.php');
+    // try tp use development version of api client
+    if (is_dir($src = realpath($argv[1])) && file_exists($loader = $src . '/Jirafe/Autoloader.php')) {
+        if (isset($argv[2]) && $argv[2] == '--update') {
+            exec("rsync -r $src/* ".__DIR__.'/api_client');
+            echo "updated \033[33m".__DIR__."/api_client\033[0m from \033[33m{$src}\033[0m\n";
+        } else {
+            $dat = preg_replace_callback(LOADER_REGEX, function($m) use($loader) {
+                return "require_once '{$loader}'";
+            }, $dat);
+            file_put_contents(__DIR__ . '/jirafe_base.php', $dat);
+            echo "now autoloading with \033[33m{$loader}\033[0m"; exit(0);
+        }
+    } else {
+        echo "invalid api client source directory provided"; exit(1);
+    }
+}
+// reset to local api client version
+$dat = preg_replace_callback(LOADER_REGEX, function($m) {
+    return "require_once _PS_MODULE_DIR_ . 'jirafe/api_client/Jirafe/Autoloader.php'";
+}, $dat);
+file_put_contents(__DIR__ . '/jirafe_base.php', $dat);
+echo "reset to local autoloader \033[33m".__DIR__."/api_client/Jirafe/Autoloader.php\033[0m";
+exit(0);
+
