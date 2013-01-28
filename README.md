@@ -2,36 +2,51 @@
 
 This project builds a Prestashop module which automatically integrates Jirafe analytics into the Prestashop ecommerce platform.
 
-Note that this project uses the Jirafe PHP Client as a submodule, so you cannot just download it.  Please follow the installation instructions below.
+Follow the installation instructions below.
 
-## Installation
+## Install
 
-First of all, clone project:
+### Git Installation
 
-    git clone git://github.com/jirafe/prestashop-module.git
+Clone git project into your shop module directory:
 
-Then, init/update project submodule:
+    git clone git://github.com/jirafe/prestashop-module.git my_shop/modules/jirafe
 
-    cd (path_to_jirafe_module)
-    git submodule update --init
+To enable the Jirafe module for Prestashop, log into prestashop, click on **Modules** tab, and open **Stats and Analytics** item.
+Follow **Install** next to Jirafe Analytics module.
 
-Link this directory to your prestashop ecommerce platform root directory
+### Basic Installation
 
-    cd (path_to_prestashop_platform)/modules
-    ln -s (path_to_jirafe_module) jirafe
+You can find most recent version in [github tag section](https://github.com/jirafe/prestashop-module/tags) follow the
+download link which you prefer packaged as **tar.gz** or **zip**.
 
-To enable the Jirafe module for Prestashop, log into prestashop, click on the 'Modules' tab, and open the 'Stats and Analytics' item.  Click 'Install' next to the Jirafe Analytics module.
+Extract the contents in your **(path-to-shop)/modules** directory, be sure to rename it into **jirafe**. The resulted directory
+structure of your shop shoul look like:
 
-## For developers only
+    MyPrestaShop
+        classes
+        modules
+            jirafe
+                jirafe_base.php
+                jirafe.php
+                logo.png
+                ...
+            autoupgrade
+            bankwire
+            ...
+    ...
 
-### Deployment
+To enable the Jirafe module for Prestashop, log into prestashop, click on **Modules** tab, and open **Stats and Analytics** item.
+Follow **Install** next to Jirafe Analytics module.
 
-To create a clean zip file of the Jirafe module for Prestashop:
+## Uninstall Jirafe Module
 
-    cd (path_to_jirafe_module)
-    zip -r ../jirafe.zip . -x *.git*
-    
-### Uninstallation
+### Standard
+
+To remove Jirafe module for Prestashop, log into prestashop, click on **Modules** tab, and open **Stats and Analytics** item.
+Follow **uninstall** next to Jirafe Analytics module.
+
+### Manual
 
 To manually remove the plugin data from the prestashop database:
 
@@ -40,5 +55,10 @@ To manually remove the plugin data from the prestashop database:
 
 To remove the module from the prestashop platform:
 
-    rm -rf (path_to_prestashop_platform)/modules/jirafe
-    
+    rm -rf (path_to_prestashop)/modules/jirafe
+
+## Support
+
+- Product [Feedback](https://getsatisfaction.com/jirafe)
+- Report [a bug](https://jirafe.com/support)
+
