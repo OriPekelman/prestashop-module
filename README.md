@@ -4,24 +4,16 @@ This project builds a Prestashop module which automatically integrates Jirafe an
 
 Follow the installation instructions below.
 
-## Install
-
-### Git Installation
-
-Clone git project into your shop module directory:
-
-    git clone git://github.com/jirafe/prestashop-module.git my_shop/modules/jirafe
-
-To enable the Jirafe module for Prestashop, log into prestashop, click on **Modules** tab, and open **Stats and Analytics** item.
-Follow **Install** next to Jirafe Analytics module.
+## Install / Upgrade
 
 ### Basic Installation
 
-You can find most recent version in [github tag section](https://github.com/jirafe/prestashop-module/tags) follow the
+You can download most recent module version from [jirafe s3 bucket](https://s3.amazonaws.com/jirafe_plugin_downloads/prestashop/latest.zip)
+or grab it from [github tag section](https://github.com/jirafe/prestashop-module/tags) follow the
 download link which you prefer packaged as **tar.gz** or **zip**.
 
-Extract the contents in your **(path-to-shop)/modules** directory, be sure to rename it into **jirafe**. The resulted directory
-structure of your shop shoul look like:
+Extract the contents in your **(path-to-shop)/modules** directory, be sure to rename it into **jirafe**.
+If you are upgrading - backup previous **jirafe** module. The resulted directory structure of your shop shoul look like:
 
     MyPrestaShop
         classes
@@ -35,6 +27,19 @@ structure of your shop shoul look like:
             bankwire
             ...
     ...
+
+To enable the Jirafe module for Prestashop, log into prestashop, click on **Modules** tab, and open **Stats and Analytics** item.
+Follow **Install** next to Jirafe Analytics module.
+
+### Git Installation
+
+If you are upgrading - backup previous **jirafe** module:
+
+    mv my_shop/modules/jirafe my_shop/modules/jirafe_backup
+
+Clone git project into your shop module directory:
+
+    git clone git://github.com/jirafe/prestashop-module.git my_shop/modules/jirafe
 
 To enable the Jirafe module for Prestashop, log into prestashop, click on **Modules** tab, and open **Stats and Analytics** item.
 Follow **Install** next to Jirafe Analytics module.
