@@ -13,7 +13,7 @@ or grab it from [github tag section](https://github.com/jirafe/prestashop-module
 download link which you prefer packaged as **tar.gz** or **zip**.
 
 Extract the contents in your **(path-to-shop)/modules** directory, be sure to rename it into **jirafe**.
-If you are upgrading - backup previous **jirafe** module. The resulted directory structure of your shop shoul look like:
+If you are upgrading - backup previous **jirafe** module. The resulted directory structure of your shop should look like:
 
     MyPrestaShop
         classes
