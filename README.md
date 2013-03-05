@@ -64,6 +64,5 @@ To remove the module from the prestashop platform:
 
 ## Support
 
-- Product [Feedback](https://getsatisfaction.com/jirafe)
 - Report [a bug](https://jirafe.com/support)
 
